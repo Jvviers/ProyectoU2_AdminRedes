@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-master:5432']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:3000']
+
+  - job_name: 'config-service'
+    static_configs:
+      - targets: ['config-service:3000']
+
+  - job_name: 'appointment-service'
+    static_configs:
+      - targets: ['appointment-service:3000']
+
+  - job_name: 'queue-service'
+    static_configs:
+      - targets: ['queue-service:3000']
+
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:3000']
+
+  - job_name: 'statistics-service'
+    static_configs:
+      - targets: ['statistics-service:3000']

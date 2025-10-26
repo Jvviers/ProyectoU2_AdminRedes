@@ -1,0 +1,35 @@
+# Environment Variables
+.env
+
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+
+# Backups
+backups/*.sql
+backups/*.gz
+
+# Build
+dist/
+build/
+.next/
+
+# Testing
+coverage/

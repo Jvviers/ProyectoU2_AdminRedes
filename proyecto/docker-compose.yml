@@ -1,0 +1,312 @@
+
+networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+  database-network:
+    driver: bridge
+
+volumes:
+  postgres-master-data:
+  postgres-replica-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+
+services:
+  # ============================================
+  # CAPA DE DATOS
+  # ============================================
+  
+  postgres-master:
+    image: postgres:15-alpine
+    container_name: postgres-master
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-master-data:/var/lib/postgresql/data
+      - ./infrastructure/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - database-network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  postgres-replica:
+    image: postgres:15-alpine
+    container_name: postgres-replica
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-replica-data:/var/lib/postgresql/data
+    networks:
+      - database-network
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend-network
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================================
+  # MICROSERVICIOS BACKEND
+  # ============================================
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 3000
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3001:3000"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  config-service:
+    build:
+      context: ./services/config-service
+      dockerfile: Dockerfile
+    container_name: config-service
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 3000
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3002:3000"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    restart: unless-stopped
+
+  appointment-service:
+    build:
+      context: ./services/appointment-service
+      dockerfile: Dockerfile
+    container_name: appointment-service
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 3000
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3003:3000"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    restart: unless-stopped
+
+  queue-service:
+    build:
+      context: ./services/queue-service
+      dockerfile: Dockerfile
+    container_name: queue-service
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 3000
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3004:3000"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      API_PORT: 3000
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3005:3000"
+    depends_on:
+      - postgres-master
+    restart: unless-stopped
+
+  statistics-service:
+    build:
+      context: ./services/statistics-service
+      dockerfile: Dockerfile
+    container_name: statistics-service
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      API_PORT: 3000
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3006:3000"
+    depends_on:
+      - postgres-master
+    restart: unless-stopped
+
+  # ============================================
+  # API GATEWAY
+  # ============================================
+  
+  api-gateway:
+    image: nginx:alpine
+    container_name: api-gateway
+    volumes:
+      - ./services/api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    networks:
+      - frontend-network
+      - backend-network
+    depends_on:
+      - auth-service
+      - config-service
+      - appointment-service
+      - queue-service
+      - notification-service
+      - statistics-service
+    restart: unless-stopped
+
+  # ============================================
+  # FRONTEND
+  # ============================================
+  
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    networks:
+      - frontend-network
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+  # ============================================
+  # MONITOREO
+  # ============================================
+  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./infrastructure/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3010:3000"
+    networks:
+      - backend-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
