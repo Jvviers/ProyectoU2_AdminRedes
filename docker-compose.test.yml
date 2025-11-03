@@ -50,3 +50,32 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
+
+  # Config Service
+  config-service:
+    build:
+      context: ./services/config-service
+      dockerfile: Dockerfile
+    container_name: config-service
+    environment:
+      NODE_ENV: development
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: municipalidad_db
+      DB_USER: admin
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 3000
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3002:3000"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
