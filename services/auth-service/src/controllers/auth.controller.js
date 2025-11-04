@@ -12,7 +12,7 @@ class AuthController {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { nombre, email, rut, password, telefono } = req.body;
+      const { nombre, apellido, email, rut, password, telefono } = req.body;
 
       const existingUser = await User.findByEmail(email);
       if (existingUser) {
@@ -28,6 +28,7 @@ class AuthController {
 
       const newUser = await User.create({
         nombre,
+        apellido,
         email,
         rut,
         password_hash: passwordHash,

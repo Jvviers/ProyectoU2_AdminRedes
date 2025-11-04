@@ -7,6 +7,7 @@ const { authMiddleware } = require('../middleware/auth.middleware');
 // Validaciones
 const registerValidation = [
   body('nombre').trim().notEmpty().withMessage('Nombre es requerido'),
+  body('apellido').trim().notEmpty().withMessage('Apellido es requerido'),
   body('email').isEmail().withMessage('Email inválido'),
   body('rut').matches(/^\d{7,8}-[\dkK]$/).withMessage('RUT inválido'),
   body('password').isLength({ min: 6 }).withMessage('Contraseña debe tener mínimo 6 caracteres'),
