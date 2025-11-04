@@ -79,3 +79,28 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+
+  # Appointment Service
+  appointment-service:
+    build:
+      context: ./services/appointment-service
+      dockerfile: Dockerfile
+    container_name: appointment-service
+    environment:
+      NODE_ENV: development
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: municipalidad_db
+      DB_USER: admin
+      DB_PASSWORD: ${DB_PASSWORD}
+      API_PORT: 3001
+      JWT_SECRET: ${JWT_SECRET}
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    restart: unless-stopped
