@@ -210,5 +210,19 @@ VALUES (
 ) ON CONFLICT DO NOTHING;
 
 -- Finalizado
+--Unidad de ejemplo
+         INSERT INTO unidades (nombre, descripcion, direccion_id)
+         SELECT 'Licencias de Conducir', 'Unidad para la obtención y renovación de licencias.', id
+         FROM direcciones_municipales WHERE nombre = 'Dirección de Tránsito'
+         ON CONFLICT DO NOTHING;
+    
+         -- Servicio de ejemplo
+     INSERT INTO servicios (nombre, descripcion, tiempo_estimado_minutos, unidad_id)
+        SELECT 'Renovación Licencia Clase B', 'Renovación de licencia de conducir para vehículos particulares.', 30, u.id
+        FROM unidades u WHERE u.nombre = 'Licencias de Conducir'
+     ON CONFLICT DO NOTHING;
+
+
+
 SELECT 'Base de datos inicializada correctamente' AS status;
 

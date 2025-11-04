@@ -10,10 +10,8 @@ const PORT = process.env.API_PORT || 3001; // Usamos el puerto de la variable de
 
 // Middlewares de seguridad
 app.use(helmet()); // Añadimos las cabeceras de seguridad a todas las respuestas
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'], // Definimos los orígenes permitidos para las peticiones CORS
-  credentials: true // Permitimos enviar credenciales como cookies
-}));
+// Para pruebas locales, permitimos todos los orígenes. En producción, deberías restringirlo.
+app.use(cors());
 app.use(express.json()); // Middleware para parsear el cuerpo de las peticiones como JSON
 app.use(express.urlencoded({ extended: true })); // Middleware para parsear datos URL-encoded (por ejemplo, formularios)
 
