@@ -2,101 +2,88 @@ const { validationResult } = require('express-validator');
 const Appointment = require('../models/appointment.model');
 
 class AppointmentController {
-  // Función para crear una nueva cita
   async createAppointment(req, res) {
     try {
-      // Validamos los posibles errores en los datos recibidos
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() }); // Si hay errores, respondemos con un 400 y los errores
+        return res.status(400).json({ errors: errors.array() });
       }
 
-      // El id del usuario debería venir de un middleware de autenticación
-      const usuario_id = req.user.id; 
-      const { fecha_cita, hora_cita, tramite_id, direccion_id } = req.body;
+      const usuario_id = req.user.id;
+      const { servicio_id, fecha_hora, tipo, notas } = req.body;
 
-      // Creamos la nueva cita en la base de datos
       const newAppointment = await Appointment.create({
-        fecha_cita,
-        hora_cita,
         usuario_id,
-        tramite_id,
-        direccion_id
+        servicio_id,
+        fecha_hora,
+        tipo,
+        notas
       });
 
-      // Respondemos con un mensaje de éxito y los detalles de la cita creada
       res.status(201).json({
-        message: 'Cita creada exitosamente',
+        message: 'Agendamiento creado exitosamente',
         appointment: newAppointment
       });
     } catch (error) {
-      console.error('Error creando cita:', error); // Si ocurre un error, lo mostramos en consola
-      res.status(500).json({ error: 'Error al crear la cita' }); // Respondemos con un error 500 si no se puede crear la cita
+      console.error('Error creando agendamiento:', error);
+      res.status(500).json({ error: 'Error al crear el agendamiento' });
     }
   }
 
-  // Función para obtener las citas del usuario autenticado
   async getMyAppointments(req, res) {
     try {
-      const usuario_id = req.user.id; // Obtenemos el id del usuario desde el middleware de autenticación
-      const appointments = await Appointment.findByUserId(usuario_id); // Buscamos las citas del usuario
-      res.json(appointments); // Respondemos con las citas del usuario
+      const usuario_id = req.user.id;
+      const appointments = await Appointment.findByUserId(usuario_id);
+      res.json(appointments);
     } catch (error) {
-      console.error('Error obteniendo mis citas:', error); // Si ocurre un error, lo mostramos en consola
-      res.status(500).json({ error: 'Error al obtener las citas' }); // Respondemos con un error 500 si no se puede obtener las citas
+      console.error('Error obteniendo mis agendamientos:', error);
+      res.status(500).json({ error: 'Error al obtener los agendamientos' });
     }
   }
 
-  // Función para obtener todas las citas (solo para administradores)
   async getAllAppointments(req, res) {
-    // Esto debería estar restringido a administradores
     try {
-      const appointments = await Appointment.findAll(); // Obtenemos todas las citas
-      res.json(appointments); // Respondemos con todas las citas
+      const appointments = await Appointment.findAll();
+      res.json(appointments);
     } catch (error) {
-      console.error('Error obteniendo todas las citas:', error); // Si ocurre un error, lo mostramos en consola
-      res.status(500).json({ error: 'Error al obtener las citas' }); // Respondemos con un error 500 si no se pueden obtener las citas
+      console.error('Error obteniendo todos los agendamientos:', error);
+      res.status(500).json({ error: 'Error al obtener los agendamientos' });
     }
   }
 
-  // Función para obtener una cita específica por su ID
   async getAppointmentById(req, res) {
     try {
-      const appointment = await Appointment.findById(req.params.id); // Buscamos la cita por ID
+      const appointment = await Appointment.findById(req.params.id);
       if (!appointment) {
-        return res.status(404).json({ error: 'Cita no encontrada' }); // Si no existe la cita, respondemos con un 404
+        return res.status(404).json({ error: 'Agendamiento no encontrado' });
       }
-      // Comprobamos si el usuario tiene permisos para ver esta cita
       if (req.user.rol !== 'administrador' && appointment.usuario_id !== req.user.id) {
-          return res.status(403).json({ error: 'No autorizado para ver esta cita' }); // Si no tiene permisos, respondemos con un 403
+          return res.status(403).json({ error: 'No autorizado para ver este agendamiento' });
       }
-      res.json(appointment); // Respondemos con los detalles de la cita
+      res.json(appointment);
     } catch (error) {
-      console.error('Error obteniendo cita por ID:', error); // Si ocurre un error, lo mostramos en consola
-      res.status(500).json({ error: 'Error al obtener la cita' }); // Respondemos con un error 500 si no se puede obtener la cita
+      console.error('Error obteniendo agendamiento por ID:', error);
+      res.status(500).json({ error: 'Error al obtener el agendamiento' });
     }
   }
 
-  // Función para cancelar una cita
   async cancelAppointment(req, res) {
     try {
-      const appointment = await Appointment.findById(req.params.id); // Buscamos la cita por ID
-      if (!appointment) {
-        return res.status(404).json({ error: 'Cita no encontrada' }); // Si no existe la cita, respondemos con un 404
+      const appointment = await Appointment.findById(req.params.id);
+       if (!appointment) {
+        return res.status(404).json({ error: 'Agendamiento no encontrado' });
       }
-      // Comprobamos si el usuario tiene permisos para cancelar esta cita
       if (req.user.rol !== 'administrador' && appointment.usuario_id !== req.user.id) {
-          return res.status(403).json({ error: 'No autorizado para cancelar esta cita' }); // Si no tiene permisos, respondemos con un 403
+          return res.status(403).json({ error: 'No autorizado para cancelar este agendamiento' });
       }
 
-      // Cancelamos la cita
-      const cancelledAppointment = await Appointment.delete(req.params.id);
-      res.json({ message: 'Cita cancelada', appointment: cancelledAppointment }); // Respondemos con un mensaje de éxito
+      const cancelledAppointment = await Appointment.cancel(req.params.id);
+      res.json({ message: 'Agendamiento cancelado', appointment: cancelledAppointment });
     } catch (error) {
-      console.error('Error cancelando cita:', error); // Si ocurre un error, lo mostramos en consola
-      res.status(500).json({ error: 'Error al cancelar la cita' }); // Respondemos con un error 500 si no se puede cancelar la cita
+      console.error('Error cancelando agendamiento:', error);
+      res.status(500).json({ error: 'Error al cancelar el agendamiento' });
     }
   }
 }
 
-module.exports = new AppointmentController(); // Exportamos el controlador para usarlo en otras partes de la aplicación
+module.exports = new AppointmentController();

@@ -6,10 +6,10 @@ const { authMiddleware, roleMiddleware } = require('../middleware/auth.middlewar
 
 // Validation for creating an appointment
 const createAppointmentValidation = [
-  body('fecha_cita').isISO8601().toDate().withMessage('Fecha de cita inválida'),
-  body('hora_cita').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Hora de cita inválida'),
-  body('tramite_id').isInt().withMessage('ID de trámite inválido'),
-  body('direccion_id').isInt().withMessage('ID de dirección inválido')
+  body('fecha_hora').isISO8601().withMessage('Fecha y hora inválida'),
+  body('servicio_id').isUUID().withMessage('ID de servicio inválido'),
+  body('tipo').isIn(['presencial', 'online']).withMessage('Tipo de cita inválido'),
+  body('notas').optional().isString()
 ];
 
 // All routes are protected
