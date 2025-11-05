@@ -11,6 +11,7 @@ document.getElementById('register-form').addEventListener('submit', async (event
         rut: document.getElementById('rut').value,
         password: document.getElementById('password').value,
         telefono: document.getElementById('telefono').value,
+        rol: document.getElementById('rol').value,
     };
 
     try {

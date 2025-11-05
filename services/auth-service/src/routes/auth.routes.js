@@ -11,7 +11,8 @@ const registerValidation = [
   body('email').isEmail().withMessage('Email inválido'),
   body('rut').matches(/^\d{7,8}-[\dkK]$/).withMessage('RUT inválido'),
   body('password').isLength({ min: 6 }).withMessage('Contraseña debe tener mínimo 6 caracteres'),
-  body('telefono').optional().isMobilePhone('es-CL').withMessage('Teléfono inválido')
+  body('telefono').optional().isMobilePhone('es-CL').withMessage('Teléfono inválido'),
+  body('rol').optional().isIn(['ciudadano', 'funcionario', 'administrador']).withMessage('Rol inválido')
 ];
 
 const loginValidation = [
