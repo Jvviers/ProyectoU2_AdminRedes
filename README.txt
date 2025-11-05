@@ -1,32 +1,48 @@
 README - Instrucciones de Inicio del Proyecto
 
-Este documento proporciona las instrucciones para iniciar el proyecto utilizando Docker Compose.
+Este documento proporciona las instrucciones para iniciar el proyecto completo utilizando Docker Compose.
+
+**IMPORTANTE:** Utiliza el archivo docker-compose.yml que se encuentra en la carpeta `proyecto/`.
 
 1.  Requisitos Previos:
     Asegúrate de tener Docker y Docker Compose instalados en tu sistema.
 
 2.  Iniciar el Proyecto:
-    a.  Navega a la raíz del directorio del proyecto en tu terminal.
-        cd C:\Users\usuario\Documents\GitHub\ProyectoU2_AdminRedes
+    a.  Navega a la carpeta `proyecto` en tu terminal.
+        cd C:\Users\usuario\Documents\GitHub\ProyectoU2_AdminRedes\proyecto
 
-    b.  Detén y elimina cualquier contenedor Docker antiguo que pueda estar ejecutándose y que pertenezca a este proyecto. Esto asegura un inicio limpio.
+    b.  Detén y elimina cualquier contenedor Docker antiguo que pueda estar ejecutándose.
         docker-compose down
 
-    c.  Construye las imágenes de Docker (si hay cambios o es la primera vez) y levanta todos los servicios en modo detached (segundo plano).
+    c.  Construye las imágenes y levanta todos los servicios en modo detached (segundo plano).
         docker-compose up -d --build
 
 3.  Verificar el Estado de los Servicios:
-    Puedes verificar el estado de los contenedores Docker en ejecución con el siguiente comando:
+    Desde la carpeta `proyecto/`, puedes verificar el estado de los contenedores con:
         docker-compose ps
 
     Asegúrate de que todos los servicios estén en estado 'Up' o 'healthy'.
 
 4.  Acceso a los Servicios:
-    Los servicios del proyecto estarán accesibles en los siguientes puertos (si están expuestos en tu configuración de Docker Compose):
-    -   Auth Service: http://localhost:3000
-    -   Appointment Service: http://localhost:3001
-    -   Config Service: http://localhost:3002
-    -   PostgreSQL: Puerto 5432
-    -   Redis: Puerto 6379
+    Una vez que todos los contenedores estén en funcionamiento, podrás acceder a los diferentes servicios a través de las siguientes URLs:
+
+    **Interfaces de Usuario (Frontend):**
+    -   Lobby Frontend: http://localhost:8083
+    -   Auth Frontend: http://localhost:8082
+    -   Config Frontend: http://localhost:8081
+
+    **API Gateway (Punto de entrada para APIs):**
+    -   URL Base: http://localhost:8080
+    -   Ruta de Autenticación: http://localhost:8080/api/auth/
+    -   Ruta de Configuración: http://localhost:8080/api/config/
+    -   Ruta de Citas: http://localhost:8080/api/appointments/
+
+    **Herramientas de Monitoreo:**
+    -   Prometheus: http://localhost:9090
+    -   Grafana: http://localhost:3010
+
+    **Bases de Datos y Servicios Internos:**
+    -   PostgreSQL: localhost:5432
+    -   Redis: localhost:6379
 
 ¡Listo! El proyecto debería estar funcionando.
