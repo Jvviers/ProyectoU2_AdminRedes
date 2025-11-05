@@ -33,7 +33,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -93,12 +93,12 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      API_PORT: 3000
+      API_PORT: 3001
     networks:
       - backend-network
       - database-network
     ports:
-      - "3001:3000"
+      - "3001:3001"
     depends_on:
       postgres-master:
         condition: service_healthy
@@ -121,12 +121,12 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      API_PORT: 3000
+      API_PORT: 3002
     networks:
       - backend-network
       - database-network
     ports:
-      - "3002:3000"
+      - "3002:3002"
     depends_on:
       postgres-master:
         condition: service_healthy
@@ -147,12 +147,12 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      API_PORT: 3000
+      API_PORT: 3003
     networks:
       - backend-network
       - database-network
     ports:
-      - "3003:3000"
+      - "3003:3003"
     depends_on:
       postgres-master:
         condition: service_healthy
