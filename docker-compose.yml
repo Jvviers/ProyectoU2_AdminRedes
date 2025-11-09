@@ -148,6 +148,7 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       API_PORT: 3003
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - backend-network
       - database-network
@@ -158,81 +159,81 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # queue-service:
-  #   build:
-  #     context: ./services/queue-service
-  #     dockerfile: Dockerfile
-  #   container_name: queue-service
-  #   environment:
-  #     NODE_ENV: ${NODE_ENV}
-  #     DB_HOST: postgres-master
-  #     DB_PORT: 5432
-  #     DB_NAME: ${DB_NAME}
-  #     DB_USER: ${DB_USER}
-  #     DB_PASSWORD: ${DB_PASSWORD}
-  #     REDIS_HOST: redis
-  #     REDIS_PORT: 6379
-  #     REDIS_PASSWORD: ${REDIS_PASSWORD}
-  #     API_PORT: 3000
-  #   networks:
-  #     - backend-network
-  #     - database-network
-  #   ports:
-  #     - "3004:3000"
-  #   depends_on:
-  #     postgres-master:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   restart: unless-stopped
+  queue-service:
+    build:
+      context: ./services/queue-service
+      dockerfile: Dockerfile
+    container_name: queue-service
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 3004
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
-  # notification-service:
-  #   build:
-  #     context: ./services/notification-service
-  #     dockerfile: Dockerfile
-  #   container_name: notification-service
-  #   environment:
-  #     NODE_ENV: ${NODE_ENV}
-  #     DB_HOST: postgres-master
-  #     DB_PORT: 5432
-  #     DB_NAME: ${DB_NAME}
-  #     DB_USER: ${DB_USER}
-  #     DB_PASSWORD: ${DB_PASSWORD}
-  #     SMTP_HOST: ${SMTP_HOST}
-  #     SMTP_PORT: ${SMTP_PORT}
-  #     SMTP_USER: ${SMTP_USER}
-  #     SMTP_PASSWORD: ${SMTP_PASSWORD}
-  #     API_PORT: 3000
-  #   networks:
-  #     - backend-network
-  #     - database-network
-  #   ports:
-  #     - "3005:3000"
-  #   depends_on:
-  #     - postgres-master
-  #   restart: unless-stopped
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      API_PORT: 3005
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3005:3005"
+    depends_on:
+      - postgres-master
+    restart: unless-stopped
 
-  # statistics-service:
-  #   build:
-  #     context: ./services/statistics-service
-  #     dockerfile: Dockerfile
-  #   container_name: statistics-service
-  #   environment:
-  #     NODE_ENV: ${NODE_ENV}
-  #     DB_HOST: postgres-master
-  #     DB_PORT: 5432
-  #     DB_NAME: ${DB_NAME}
-  #     DB_USER: ${DB_USER}
-  #     DB_PASSWORD: ${DB_PASSWORD}
-  #     API_PORT: 3000
-  #   networks:
-  #     - backend-network
-  #     - database-network
-  #   ports:
-  #     - "3006:3000"
-  #   depends_on:
-  #     - postgres-master
-  #   restart: unless-stopped
+  statistics-service:
+    build:
+      context: ./services/statistics-service
+      dockerfile: Dockerfile
+    container_name: statistics-service
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      API_PORT: 3006
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3006:3006"
+    depends_on:
+      - postgres-master
+    restart: unless-stopped
 
   # ============================================
   # API GATEWAY
@@ -252,9 +253,9 @@ services:
       - auth-service
       - config-service
       - appointment-service
-      # - queue-service
-      # - notification-service
-      # - statistics-service
+      - queue-service
+      - notification-service
+      - statistics-service
     restart: unless-stopped
 
   # ============================================

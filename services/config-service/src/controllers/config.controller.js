@@ -1,9 +1,18 @@
 const Direcciones = require('../models/direcciones.model');
 
 class ConfigController {
+  constructor(configurationsRetrievedCounter) {
+    this.configurationsRetrievedCounter = configurationsRetrievedCounter;
+    this.getDirecciones = this.getDirecciones.bind(this);
+    this.createDireccion = this.createDireccion.bind(this);
+    this.updateDireccion = this.updateDireccion.bind(this);
+    this.deleteDireccion = this.deleteDireccion.bind(this);
+  }
+
   async getDirecciones(req, res) {
     try {
       const data = await Direcciones.findAll();
+      this.configurationsRetrievedCounter.inc(); // Increment the counter
       res.json(data);
     } catch (err) {
       console.error(err);
@@ -42,4 +51,4 @@ class ConfigController {
   }
 }
 
-module.exports = new ConfigController();
+module.exports = (configurationsRetrievedCounter) => new ConfigController(configurationsRetrievedCounter);

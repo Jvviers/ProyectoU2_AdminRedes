@@ -5,6 +5,20 @@ const User = require('../models/user.model');
 const { getRedisClient } = require('../config/redis');
 
 class AuthController {
+  constructor(loginSuccessCounter, loginFailedCounter) {
+    this.loginSuccessCounter = loginSuccessCounter;
+    this.loginFailedCounter = loginFailedCounter;
+
+    // Bindeamos el 'this' para todos los métodos que se usarán como handlers
+    this.register = this.register.bind(this);
+    this.login = this.login.bind(this);
+    this.verifyToken = this.verifyToken.bind(this);
+    this.getProfile = this.getProfile.bind(this);
+    this.updateProfile = this.updateProfile.bind(this);
+    this.logout = this.logout.bind(this);
+    this.getAllUsers = this.getAllUsers.bind(this);
+  }
+
   async register(req, res) {
     try {
       const errors = validationResult(req);
@@ -63,6 +77,7 @@ class AuthController {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        this.loginFailedCounter.inc(); // Increment failed counter for validation errors
         return res.status(400).json({ errors: errors.array() });
       }
 
@@ -70,15 +85,18 @@ class AuthController {
 
       const user = await User.findByEmail(email);
       if (!user) {
+        this.loginFailedCounter.inc(); // Increment failed counter for user not found
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
 
       const validPassword = await bcrypt.compare(password, user.password_hash);
       if (!validPassword) {
+        this.loginFailedCounter.inc(); // Increment failed counter for wrong password
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
 
       if (!user.activo) {
+        this.loginFailedCounter.inc(); // Increment failed counter for inactive user
         return res.status(403).json({ error: 'Usuario desactivado' });
       }
 
@@ -93,6 +111,8 @@ class AuthController {
       const redis = getRedisClient();
       await redis.setEx(`session:${user.id}`, 86400, token);
 
+      this.loginSuccessCounter.inc(); // Increment successful login counter
+
       res.json({
         message: 'Login exitoso',
         token,
@@ -106,6 +126,7 @@ class AuthController {
       });
     } catch (error) {
       console.error('Error en login:', error);
+      this.loginFailedCounter.inc(); // Increment failed counter for other errors
       res.status(500).json({ error: 'Error al iniciar sesión' });
     }
   }
@@ -189,4 +210,4 @@ class AuthController {
   }
 }
 
-module.exports = new AuthController();
+module.exports = (loginSuccessCounter, loginFailedCounter) => new AuthController(loginSuccessCounter, loginFailedCounter);
