@@ -105,6 +105,12 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
 
   config-service:
     build:
@@ -131,6 +137,12 @@ services:
       postgres-master:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
 
   appointment-service:
     build:
@@ -158,6 +170,12 @@ services:
       postgres-master:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
 
   queue-service:
     build:
@@ -186,6 +204,12 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3004/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
 
   notification-service:
     build:
@@ -207,11 +231,13 @@ services:
     networks:
       - backend-network
       - database-network
-    ports:
-      - "3005:3005"
-    depends_on:
-      - postgres-master
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3005/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
 
   statistics-service:
     build:
@@ -234,13 +260,19 @@ services:
     depends_on:
       - postgres-master
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3006/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
 
   # ============================================
   # API GATEWAY
   # ============================================
   
   api-gateway:
-    image: nginx:alpine
+    image: nginx:1.28.0-alpine
     container_name: api-gateway
     volumes:
       - ./services/api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -278,7 +310,7 @@ services:
   #   restart: unless-stopped
 
   config-frontend:
-    image: nginx:alpine
+    image: nginx:1.28.0-alpine
     container_name: config-frontend
     volumes:
       - ./services/config-service/frontend:/usr/share/nginx/html:ro
@@ -288,7 +320,7 @@ services:
     restart: unless-stopped
 
   auth-frontend:
-    image: nginx:alpine
+    image: nginx:1.28.0-alpine
     container_name: auth-frontend
     volumes:
       - ./services/auth-service/frontend:/usr/share/nginx/html:ro
@@ -298,7 +330,7 @@ services:
     restart: unless-stopped
 
   lobby-frontend:
-    image: nginx:alpine
+    image: nginx:1.28.0-alpine
     container_name: lobby-frontend
     volumes:
       - ./services/lobby-frontend:/usr/share/nginx/html:ro
@@ -312,7 +344,7 @@ services:
   # ============================================
   
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.47.2
     container_name: prometheus
     volumes:
       - ./infrastructure/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
@@ -327,7 +359,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.1.5
     container_name: grafana
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}

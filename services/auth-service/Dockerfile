@@ -1,5 +1,12 @@
 FROM node:18-alpine
 
+# Metadatos de la imagen
+LABEL org.opencontainers.image.authors="Gemini"
+LABEL org.opencontainers.image.vendor="ProyectoU2_AdminRedes"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.title="auth-service"
+LABEL org.opencontainers.image.description="Servicio de autenticación de usuarios."
+
 # Crear usuario no privilegiado
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
@@ -22,10 +29,6 @@ USER nodejs
 
 # Exponer puerto
 EXPOSE 3000
-
-# Health check / ESTO LO ENTREGÓ LA IA PERO LOS HEATHCHECKS DEBERÍAN IR EN EL DOCKER-COMPOSE, NO EN EL DOCKERFILE
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Comando de inicio
 CMD ["node", "src/index.js"]
