@@ -12,6 +12,7 @@ volumes:
   redis-data:
   prometheus-data:
   grafana-data:
+  backups:
 
 services:
   # ============================================
@@ -106,6 +107,36 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  auth-service-2:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service-2
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 3001
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3007:3001" # Expose on a different host port
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
   config-service:
     build:
       context: ./services/config-service
@@ -127,6 +158,32 @@ services:
       - database-network
     ports:
       - "3002:3002"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    restart: unless-stopped
+
+  config-service-2:
+    build:
+      context: ./services/config-service
+      dockerfile: Dockerfile
+    container_name: config-service-2
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 3002
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3008:3002" # Expose on a different host port
     depends_on:
       postgres-master:
         condition: service_healthy
@@ -154,6 +211,33 @@ services:
       - database-network
     ports:
       - "3003:3003"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    restart: unless-stopped
+
+  appointment-service-2:
+    build:
+      context: ./services/appointment-service
+      dockerfile: Dockerfile
+    container_name: appointment-service-2
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 3003
+      JWT_SECRET: ${JWT_SECRET}
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3009:3003" # Expose on a different host port
     depends_on:
       postgres-master:
         condition: service_healthy
@@ -187,6 +271,34 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  queue-service-2:
+    build:
+      context: ./services/queue-service
+      dockerfile: Dockerfile
+    container_name: queue-service-2
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 3004
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3013:3004" # Expose on a different host port
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
   notification-service:
     build:
       context: ./services/notification-service
@@ -213,6 +325,32 @@ services:
       - postgres-master
     restart: unless-stopped
 
+  notification-service-2:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service-2
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      API_PORT: 3005
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3011:3005" # Expose on a different host port
+    depends_on:
+      - postgres-master
+    restart: unless-stopped
+
   statistics-service:
     build:
       context: ./services/statistics-service
@@ -234,6 +372,51 @@ services:
     depends_on:
       - postgres-master
     restart: unless-stopped
+
+  statistics-service-2:
+    build:
+      context: ./services/statistics-service
+      dockerfile: Dockerfile
+    container_name: statistics-service-2
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: postgres-master
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      API_PORT: 3006
+    networks:
+      - backend-network
+      - database-network
+    ports:
+      - "3012:3006" # Expose on a different host port
+    depends_on:
+      - postgres-master
+    restart: unless-stopped
+
+  # ============================================
+  # BACKUP SERVICE
+  # ============================================
+  backup-service:
+    image: postgres:15-alpine
+    container_name: backup-service
+    volumes:
+      - ./scripts:/scripts
+      - backups:/backups
+      - ./services/api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro # Mount for config backup
+      - ./infrastructure/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro # Mount for config backup
+      - ./.env:/app/.env:ro # Mount .env for config backup
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - database-network # To access postgres-master
+    command: ["tail", "-f", "/dev/null"] # Keep container running
+    depends_on:
+      - postgres-master
+    restart: on-failure
 
   # ============================================
   # API GATEWAY
