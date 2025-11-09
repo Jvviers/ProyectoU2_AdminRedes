@@ -2,12 +2,32 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const authRoutes = require('./routes/auth.routes');
 const { connectDB } = require('./config/database');
 const { connectRedis } = require('./config/redis');
+const promClient = require('prom-client');
+
+// Inicializar prom-client
+const register = new promClient.Registry();
+promClient.collectDefaultMetrics({ register });
+
+// Crear contadores customizados para logins
+const loginSuccessCounter = new promClient.Counter({
+  name: 'auth_service_login_success_total',
+  help: 'Total number of successful login attempts',
+  registers: [register],
+});
+
+const loginFailedCounter = new promClient.Counter({
+  name: 'auth_service_login_failed_total',
+  help: 'Total number of failed login attempts',
+  registers: [register],
+});
+
+// Ahora que los contadores existen, podemos inicializar las rutas
+const authRoutes = require('./routes/auth.routes')(loginSuccessCounter, loginFailedCounter);
 
 const app = express();
-const PORT = process.env.API_PORT || 3000;
+const PORT = process.env.API_PORT || 3001;
 
 // Middlewares de seguridad
 app.use(helmet());
@@ -36,6 +56,16 @@ app.get('/health', (req, res) => {
 // Rutas
 app.use('/api/auth', authRoutes);
 
+// Endpoint de Métricas para Prometheus
+app.get('/metrics', async (req, res) => {
+    try {
+        res.set('Content-Type', register.contentType);
+        res.end(await register.metrics());
+    } catch (ex) {
+        res.status(500).end(ex);
+    }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
@@ -60,6 +90,7 @@ async function startServer() {
 
     app.listen(PORT, () => {
       console.log(`🚀 Auth Service corriendo en puerto ${PORT}`);
+      console.log(`📊 Métricas disponibles en http://localhost:${PORT}/metrics`);
     });
   } catch (error) {
     console.error('❌ Error al iniciar servidor:', error);

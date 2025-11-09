@@ -1,0 +1,15 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.container {
+    max-width: 500px;
+}
+
+#auth-forms,
+#profile-view {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}

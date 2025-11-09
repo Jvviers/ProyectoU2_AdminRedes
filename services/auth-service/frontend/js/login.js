@@ -21,17 +21,13 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
         const result = await response.json();
 
         if (response.ok) {
-            messageDiv.innerHTML = `<div class="alert alert-success">Login exitoso.</div>`;
-            // Guarda el token en localStorage para usarlo en futuras peticiones
             localStorage.setItem('token', result.token);
-            document.getElementById('login-form').reset();
-            // Opcional: Redirigir a una página de perfil o al lobby
-            // window.location.href = 'http://localhost:8083'; // Redirigir al lobby
+            window.location.href = '/'; // Redirigir siempre al lobby
         } else {
             const errorMsg = result.errors ? result.errors.map(e => e.msg).join(', ') : (result.error || 'Error al iniciar sesión.');
             throw new Error(errorMsg);
         }
     } catch (error) {
-        messageDiv.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+        messageDiv.innerHTML = '<div class="alert alert-danger">' + error.message + '</div>';
     }
 });

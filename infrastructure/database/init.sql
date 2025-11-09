@@ -172,6 +172,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION actualizar_timestamp_queues()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER trigger_usuarios_timestamp
     BEFORE UPDATE ON usuarios
     FOR EACH ROW
@@ -194,7 +202,7 @@ VALUES (
     'Sistema',
     'admin@lascondes.cl',
     '11111111-1',
-    crypt('admin123', gen_salt('bf')),
+    '$2b$10$xQeGOZ3veVnFaoJCHi8pPOY4WETKvTgM8r8yebAtI1IIfIT9cJEIS',
     'administrador',
     TRUE
 ) ON CONFLICT (email) DO NOTHING;
@@ -222,6 +230,29 @@ VALUES (
         FROM unidades u WHERE u.nombre = 'Licencias de Conducir'
      ON CONFLICT DO NOTHING;
 
+
+
+-- =====================================================
+-- TABLA: queues (para turnos espontáneos)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS queues (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    service_id UUID NOT NULL,
+    number INTEGER NOT NULL,
+    client_name VARCHAR(255),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('waiting', 'called', 'finished', 'cancelled')) DEFAULT 'waiting',
+    station VARCHAR(50),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (service_id) REFERENCES servicios(id) ON DELETE CASCADE,
+    UNIQUE (service_id, number)
+);
+
+-- Trigger para actualizar 'updated_at' en la tabla 'queues'
+CREATE TRIGGER trigger_queues_updated_at
+    BEFORE UPDATE ON queues
+    FOR EACH ROW
+    EXECUTE FUNCTION actualizar_timestamp_queues();
 
 
 SELECT 'Base de datos inicializada correctamente' AS status;
