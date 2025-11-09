@@ -37,6 +37,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
     restart: unless-stopped
 
   postgres-replica:
@@ -53,6 +58,11 @@ services:
     depends_on:
       postgres-master:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   redis:
@@ -70,6 +80,11 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
     restart: unless-stopped
 
   # ============================================
@@ -104,6 +119,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   config-service:
@@ -125,11 +145,14 @@ services:
     networks:
       - backend-network
       - database-network
-    ports:
-      - "3002:3002"
     depends_on:
       postgres-master:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   appointment-service:
@@ -157,6 +180,11 @@ services:
     depends_on:
       postgres-master:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   queue-service:
@@ -185,6 +213,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   notification-service:
@@ -207,10 +240,13 @@ services:
     networks:
       - backend-network
       - database-network
-    ports:
-      - "3005:3005"
     depends_on:
       - postgres-master
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   statistics-service:
@@ -233,6 +269,11 @@ services:
       - "3006:3006"
     depends_on:
       - postgres-master
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   # ============================================
@@ -256,6 +297,11 @@ services:
       - queue-service
       - notification-service
       - statistics-service
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
     restart: unless-stopped
 
   # ============================================
@@ -284,7 +330,11 @@ services:
       - ./services/config-service/frontend:/usr/share/nginx/html:ro
     networks:
       - frontend-network
-
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
     restart: unless-stopped
 
   auth-frontend:
@@ -294,7 +344,11 @@ services:
       - ./services/auth-service/frontend:/usr/share/nginx/html:ro
     networks:
       - frontend-network
-
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
     restart: unless-stopped
 
   lobby-frontend:
@@ -304,7 +358,11 @@ services:
       - ./services/lobby-frontend:/usr/share/nginx/html:ro
     networks:
       - frontend-network
-
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
     restart: unless-stopped
 
   # ============================================
@@ -324,6 +382,11 @@ services:
       - "9090:9090"
     networks:
       - backend-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
     restart: unless-stopped
 
   grafana:
@@ -339,4 +402,9 @@ services:
       - backend-network
     depends_on:
       - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
