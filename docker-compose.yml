@@ -12,6 +12,7 @@ volumes:
   redis-data:
   prometheus-data:
   grafana-data:
+  loki-data:
   backups:
 
 services:
@@ -38,6 +39,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
     restart: unless-stopped
 
   postgres-replica:
@@ -54,6 +60,11 @@ services:
     depends_on:
       postgres-master:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   redis:
@@ -71,6 +82,11 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
     restart: unless-stopped
 
   # ============================================
@@ -129,7 +145,7 @@ services:
       - backend-network
       - database-network
     ports:
-      - "3007:3001" # Expose on a different host port
+      - "3014:3001" # Expose on a different host port
     depends_on:
       postgres-master:
         condition: service_healthy
@@ -156,11 +172,14 @@ services:
     networks:
       - backend-network
       - database-network
-    ports:
-      - "3002:3002"
     depends_on:
       postgres-master:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   config-service-2:
@@ -319,10 +338,13 @@ services:
     networks:
       - backend-network
       - database-network
-    ports:
-      - "3005:3005"
     depends_on:
       - postgres-master
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   notification-service-2:
@@ -349,8 +371,12 @@ services:
       - "3011:3005" # Expose on a different host port
     depends_on:
       - postgres-master
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
-
 
   ai-service:
     build:
@@ -461,6 +487,11 @@ services:
       - notification-service
       - statistics-service
       - ai-service
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
     restart: unless-stopped
 
   # ============================================
@@ -489,7 +520,11 @@ services:
       - ./services/config-service/frontend:/usr/share/nginx/html:ro
     networks:
       - frontend-network
-
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
     restart: unless-stopped
 
   auth-frontend:
@@ -499,7 +534,11 @@ services:
       - ./services/auth-service/frontend:/usr/share/nginx/html:ro
     networks:
       - frontend-network
-
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
     restart: unless-stopped
 
   lobby-frontend:
@@ -509,13 +548,41 @@ services:
       - ./services/lobby-frontend:/usr/share/nginx/html:ro
     networks:
       - frontend-network
-
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
     restart: unless-stopped
 
   # ============================================
   # MONITOREO
   # ============================================
   
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    volumes:
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./infrastructure/monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - backend-network
+    depends_on:
+      - loki
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -529,6 +596,11 @@ services:
       - "9090:9090"
     networks:
       - backend-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
     restart: unless-stopped
 
   grafana:
@@ -538,10 +610,16 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     ports:
       - "3010:3000"
     networks:
       - backend-network
     depends_on:
       - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
