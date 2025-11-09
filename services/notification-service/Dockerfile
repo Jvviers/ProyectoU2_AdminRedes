@@ -1,29 +1,44 @@
-# Usar una imagen base de Node.js
-FROM node:18-alpine
+# Stage 1: Build the application
+FROM node:18-alpine AS builder
 
-# Crear un grupo y un usuario no privilegiado para mejorar la seguridad del contenedor
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-
-# Establecer el directorio de trabajo en el contenedor
+# Set the working directory
 WORKDIR /app
 
-# Copiar el package.json y package-lock.json
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Instalar las dependencias del proyecto
+# Install all dependencies, including devDependencies
 RUN npm install
 
-# Copiar el resto de los archivos de la aplicación
+# Stage 2: Create the production image
+FROM node:18-alpine
+
+# Create a non-privileged user and group
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json for production
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Copy the node_modules from the builder stage
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy the rest of the application files
 COPY . .
 
-# Cambiamos el propietario de todos los archivos a nuestro usuario no privilegiado
+# Change ownership of the files to the non-privileged user
 RUN chown -R nodejs:nodejs /app
 
-# Establecemos que el contenedor debe ejecutarse con el usuario no privilegiado 'nodejs'
+# Switch to the non-privileged user
 USER nodejs
 
-# Exponer el puerto en el que correrá la aplicación
+# Expose the port the app runs on
 EXPOSE 3005
 
-# Comando para iniciar la aplicación
+# Command to start the application
 CMD [ "npm", "start" ]

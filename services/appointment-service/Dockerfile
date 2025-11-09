@@ -1,29 +1,44 @@
-# Usamos la imagen oficial de Node.js 18 basada en Alpine (más ligera)
-FROM node:18-alpine
+# Stage 1: Build the application
+FROM node:18-alpine AS builder
 
-# Crear un grupo y un usuario no privilegiado para mejorar la seguridad del contenedor
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-
-# Establecemos el directorio de trabajo dentro del contenedor
+# Set the working directory
 WORKDIR /app
 
-# Copiamos los archivos de dependencias (package.json y package-lock.json) al contenedor
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Instalamos las dependencias de producción con npm ci (instalación limpia y eficiente)
+# Install all dependencies, including devDependencies
+RUN npm install
+
+# Stage 2: Create the production image
+FROM node:18-alpine
+
+# Create a non-privileged user and group
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json for production
+COPY package*.json ./
+
+# Install only production dependencies
 RUN npm ci --only=production
 
-# Copiamos todo el código fuente del proyecto al contenedor
+# Copy the node_modules from the builder stage
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy the rest of the application files
 COPY . .
 
-# Cambiamos el propietario de todos los archivos a nuestro usuario no privilegiado
+# Change ownership of the files to the non-privileged user
 RUN chown -R nodejs:nodejs /app
 
-# Establecemos que el contenedor debe ejecutarse con el usuario no privilegiado 'nodejs'
+# Switch to the non-privileged user
 USER nodejs
 
-# Exponemos el puerto 3000 para que el contenedor sea accesible desde el exterior
+# Expose the port the app runs on
 EXPOSE 3000
 
-# Definimos el comando para iniciar la aplicación, en este caso 'node src/index.js'
+# Command to start the application
 CMD ["node", "src/index.js"]
