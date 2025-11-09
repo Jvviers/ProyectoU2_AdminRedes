@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM node:18-alpine AS builder
+FROM node:18.18.2-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
@@ -11,7 +11,11 @@ COPY package*.json ./
 RUN npm install
 
 # Stage 2: Create the production image
-FROM node:18-alpine
+FROM node:18.18.2-alpine
+
+# Add metadata labels
+LABEL maintainer="Your Name <your.email@example.com>"
+LABEL description="Queue service for the project."
 
 # Create a non-privileged user and group
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
