@@ -12,6 +12,7 @@ volumes:
   redis-data:
   prometheus-data:
   grafana-data:
+  loki-data:
 
 services:
   # ============================================
@@ -43,6 +44,10 @@ services:
           cpus: '1.0'
           memory: 1G
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   postgres-replica:
     image: postgres:15-alpine
@@ -64,6 +69,10 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   redis:
     image: redis:7-alpine
@@ -86,6 +95,10 @@ services:
           cpus: '0.25'
           memory: 256M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   # ============================================
   # MICROSERVICIOS BACKEND
@@ -125,6 +138,10 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   config-service:
     build:
@@ -154,6 +171,10 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   appointment-service:
     build:
@@ -186,6 +207,10 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   queue-service:
     build:
@@ -219,6 +244,10 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   notification-service:
     build:
@@ -248,6 +277,10 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   statistics-service:
     build:
@@ -275,6 +308,10 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   # ============================================
   # API GATEWAY
@@ -303,6 +340,10 @@ services:
           cpus: '0.25'
           memory: 128M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   # ============================================
   # FRONTEND
@@ -336,6 +377,10 @@ services:
           cpus: '0.1'
           memory: 64M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   auth-frontend:
     image: nginx:alpine
@@ -350,6 +395,10 @@ services:
           cpus: '0.1'
           memory: 64M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   lobby-frontend:
     image: nginx:alpine
@@ -364,11 +413,39 @@ services:
           cpus: '0.1'
           memory: 64M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   # ============================================
   # MONITOREO
   # ============================================
   
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    volumes:
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./infrastructure/monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - backend-network
+    depends_on:
+      - loki
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -388,6 +465,10 @@ services:
           cpus: '0.5'
           memory: 1G
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
 
   grafana:
     image: grafana/grafana:latest
@@ -396,6 +477,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     ports:
       - "3010:3000"
     networks:
@@ -408,3 +490,7 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
