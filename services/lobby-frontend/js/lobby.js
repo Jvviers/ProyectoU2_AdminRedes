@@ -79,16 +79,23 @@ function renderAdminView(container, user, token) {
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Dierecciones</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="http://localhost" target="_blank">Direccion</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Agendar Hora</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="http://localhost:3000" target="_blank">Agendar</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Gestión de Usuarios</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="/auth/register.html" target="_blank">Registrar Usuario</a></li>
                             <li><a class="dropdown-item" href="/auth/admin.html" target="_blank">Lista de Usuarios</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Configuraciones</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/config/" target="_blank">Administración de Direcciones</a></li>
                         </ul>
                     </li>
                 </ul>

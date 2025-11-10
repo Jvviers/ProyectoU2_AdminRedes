@@ -1,6 +1,40 @@
 const { pool } = require('../config/database'); // Importamos la conexión a la base de datos desde el archivo de configuración
 
 class Appointment {
+  // Método para verificar si hay solapamiento de agendamientos
+  async hasOverlap(servicio_id, fecha_hora) {
+    // Obtener el tiempo estimado del servicio
+    const serviceQuery = 'SELECT tiempo_estimado_minutos FROM servicios WHERE id = $1';
+    const serviceResult = await pool.query(serviceQuery, [servicio_id]);
+    if (serviceResult.rows.length === 0) {
+      throw new Error('Service not found');
+    }
+    const tiempo_estimado_minutos = serviceResult.rows[0].tiempo_estimado_minutos;
+
+    const newAppointmentStart = new Date(fecha_hora);
+    const newAppointmentEnd = new Date(newAppointmentStart.getTime() + tiempo_estimado_minutos * 60 * 1000);
+
+    const query = `
+      SELECT
+        a.id,
+        a.fecha_hora,
+        s.tiempo_estimado_minutos
+      FROM agendamientos a
+      JOIN servicios s ON a.servicio_id = s.id
+      WHERE
+        a.servicio_id = $1 AND
+        a.estado IN ('pendiente', 'confirmado') AND
+        (
+          -- Check for overlap:
+          -- (StartA <= EndB) and (EndA >= StartB)
+          ($2::timestamp, $3::timestamp) OVERLAPS (a.fecha_hora, a.fecha_hora + (s.tiempo_estimado_minutos || ' minutes')::interval)
+        )
+    `;
+    const values = [servicio_id, newAppointmentStart.toISOString(), newAppointmentEnd.toISOString()];
+    const result = await pool.query(query, values);
+    return result.rows.length > 0;
+  }
+
   // Método para crear un nuevo agendamiento
   async create(appointmentData) {
     const { usuario_id, servicio_id, fecha_hora, tipo, notas } = appointmentData; // Extraemos los datos necesarios para crear el agendamiento

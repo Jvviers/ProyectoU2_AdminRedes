@@ -21,6 +21,12 @@ class AppointmentController {
       const usuario_id = req.user.id;
       const { servicio_id, fecha_hora, tipo, notas } = req.body;
 
+      // Check for overlapping appointments
+      const overlap = await Appointment.hasOverlap(servicio_id, fecha_hora);
+      if (overlap) {
+        return res.status(409).json({ error: 'Ya existe un agendamiento que se solapa con la fecha y hora solicitada para este servicio.' });
+      }
+
       const newAppointment = await Appointment.create({
         usuario_id,
         servicio_id,
