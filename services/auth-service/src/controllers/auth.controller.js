@@ -3,6 +3,15 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 const { getRedisClient } = require('../config/redis');
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
+
+// Helper function to get the backup service container name
+const getBackupServiceContainerName = async () => {
+  const { stdout } = await execPromise('docker ps --filter "name=backup-service" --format "{{.Names}}"');
+  return stdout.trim();
+};
 
 class AuthController {
   constructor(loginSuccessCounter, loginFailedCounter) {
@@ -17,6 +26,10 @@ class AuthController {
     this.updateProfile = this.updateProfile.bind(this);
     this.logout = this.logout.bind(this);
     this.getAllUsers = this.getAllUsers.bind(this);
+    this.backupDb = this.backupDb.bind(this);
+    this.backupConfigs = this.backupConfigs.bind(this);
+    this.listBackups = this.listBackups.bind(this);
+    this.restoreDb = this.restoreDb.bind(this);
   }
 
   async register(req, res) {
@@ -206,6 +219,107 @@ class AuthController {
     } catch (error) {
       console.error('Error obteniendo usuarios:', error);
       res.status(500).json({ error: 'Error al obtener usuarios' });
+    }
+  }
+
+  async backupDb(req, res) {
+    try {
+      const backupServiceContainerName = await getBackupServiceContainerName();
+      if (!backupServiceContainerName) {
+        return res.status(500).json({ error: 'Contenedor de backup no encontrado.' });
+      }
+      const command = `docker exec ${backupServiceContainerName} /bin/bash /usr/local/bin/backup_db.sh`;
+      const { stdout, stderr } = await execPromise(command);
+      if (stderr) {
+        console.error(`Error en backupDb: ${stderr}`);
+        return res.status(500).json({ error: 'Error al realizar backup de base de datos', details: stderr });
+      }
+      res.json({ message: 'Backup de base de datos iniciado exitosamente', output: stdout });
+    } catch (error) {
+      console.error('Error en backupDb:', error);
+      res.status(500).json({ error: 'Error al realizar backup de base de datos', details: error.message });
+    }
+  }
+
+  async backupConfigs(req, res) {
+    try {
+      const backupServiceContainerName = await getBackupServiceContainerName();
+      if (!backupServiceContainerName) {
+        return res.status(500).json({ error: 'Contenedor de backup no encontrado.' });
+      }
+      const command = `docker exec ${backupServiceContainerName} /bin/bash /usr/local/bin/backup_configs.sh`;
+      const { stdout, stderr } = await execPromise(command);
+      if (stderr) {
+        console.error(`Error en backupConfigs: ${stderr}`);
+        return res.status(500).json({ error: 'Error al realizar backup de configuraciones', details: stderr });
+      }
+      res.json({ message: 'Backup de configuraciones iniciado exitosamente', output: stdout });
+    } catch (error) {
+      console.error('Error en backupConfigs:', error);
+      res.status(500).json({ error: 'Error al realizar backup de configuraciones', details: error.message });
+    }
+  }
+
+  async listBackups(req, res) {
+    try {
+      const backupServiceContainerName = await getBackupServiceContainerName();
+      if (!backupServiceContainerName) {
+        return res.status(500).json({ error: 'Contenedor de backup no encontrado.' });
+      }
+      const command = `docker exec ${backupServiceContainerName} ls -l /backups`;
+      const { stdout } = await execPromise(command);
+
+      const lines = stdout.trim().split('\n').slice(1); // Skip total line
+      const backups = lines.map(line => {
+        const parts = line.split(/\s+/);
+        // Example line: -rw-r--r--    1 root     root         3732 Nov  9 23:56 db_backup_20251109235652.sql.gz
+        // parts[4] = size, parts[5] = month, parts[6] = day, parts[7] = time/year, parts[8] = filename
+        const size = parseInt(parts[4], 10);
+        const month = parts[5];
+        const day = parts[6];
+        let yearOrTime = parts[7];
+        const filename = parts[8];
+
+        let mtime;
+        // Heuristic to determine if parts[7] is a year or time
+        if (yearOrTime.includes(':')) { // It's a time, so it's current year
+          const currentYear = new Date().getFullYear();
+          mtime = new Date(`${month} ${day}, ${currentYear} ${yearOrTime}`);
+        } else { // It's a year
+          mtime = new Date(`${month} ${day}, ${yearOrTime}`);
+        }
+        
+        return { filename, size, mtime: mtime.toISOString() };
+      }).filter(backup => backup.filename !== 'old_dummy_file.txt'); // Filter out dummy file if it exists
+
+      res.json(backups);
+    } catch (error) {
+      console.error('Error en listBackups:', error);
+      res.status(500).json({ error: 'Error al listar backups', details: error.message });
+    }
+  }
+
+  async restoreDb(req, res) {
+    try {
+      const { filename } = req.body;
+      if (!filename) {
+        return res.status(400).json({ error: 'Nombre de archivo de backup no proporcionado.' });
+      }
+
+      const backupServiceContainerName = await getBackupServiceContainerName();
+      if (!backupServiceContainerName) {
+        return res.status(500).json({ error: 'Contenedor de backup no encontrado.' });
+      }
+      const command = `docker exec ${backupServiceContainerName} /bin/bash /usr/local/bin/restore_db.sh /backups/${filename}`;
+      const { stdout, stderr } = await execPromise(command);
+      if (stderr && !stderr.includes('unrecognized configuration parameter "transaction_timeout"')) {
+        console.error(`Error en restoreDb: ${stderr}`);
+        return res.status(500).json({ error: 'Error al restaurar base de datos', details: stderr });
+      }
+      res.json({ message: `Restauración de base de datos desde ${filename} iniciada exitosamente`, output: stdout });
+    } catch (error) {
+      console.error('Error en restoreDb:', error);
+      res.status(500).json({ error: 'Error al restaurar base de datos', details: error.message });
     }
   }
 }

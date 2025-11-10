@@ -3,9 +3,6 @@ const router = express.Router();
 const { body } = require('express-validator');
 
 module.exports = (loginSuccessCounter, loginFailedCounter) => {
-  const express = require('express');
-  const router = express.Router();
-  const { body } = require('express-validator');
   const authController = require('../controllers/auth.controller')(loginSuccessCounter, loginFailedCounter);
   const { authMiddleware, roleMiddleware } = require('../middleware/auth.middleware');
 
@@ -38,6 +35,9 @@ module.exports = (loginSuccessCounter, loginFailedCounter) => {
 
   // Rutas de administrador
   router.get('/users', authMiddleware, adminMiddleware, authController.getAllUsers);
-
+  router.post('/backup/db', authMiddleware, adminMiddleware, authController.backupDb);                                          
+  router.post('/backup/configs', authMiddleware, adminMiddleware, authController.backupConfigs);                                 
+  router.get('/backup/list', authMiddleware, adminMiddleware, authController.listBackups);                                       
+  router.post('/backup/restore', authMiddleware, adminMiddleware, authController.restoreDb);
   return router;
 };
