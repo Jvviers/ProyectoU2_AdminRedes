@@ -4,7 +4,7 @@ BACKUP_FILE="/backups/db_backup_$DATE.sql.gz"
 DB_NAME="${DB_NAME}" # These should be passed as environment variables or read from .env
 DB_USER="${DB_USER}"
 DB_PASSWORD="${DB_PASSWORD}"
-DB_HOST="postgres-master" # Always backup from the current master
+DB_HOST="db-proxy" # Always backup from the current master
 
 echo "Starting PostgreSQL backup at $DATE..."
 

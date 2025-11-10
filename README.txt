@@ -42,7 +42,9 @@ Este documento proporciona las instrucciones para iniciar el proyecto completo u
     -   Grafana: http://localhost:3010
 
     **Bases de Datos y Servicios Internos:**
-    -   PostgreSQL: localhost:5432
+    -   PostgreSQL (via HAProxy): localhost:5433
+        - Uso interno entre contenedores: `db-proxy:5432`
+        - El contenedor `postgres-master` ya no expone 5432 al host; todo acceso externo debe ir por el proxy.
     -   Redis: localhost:6379
 
 ¡Listo! El proyecto debería estar funcionando.

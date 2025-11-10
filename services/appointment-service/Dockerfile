@@ -42,7 +42,7 @@ RUN chown -R nodejs:nodejs /app
 USER nodejs
 
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE 3003
 
 # Command to start the application
 CMD ["node", "src/index.js"]

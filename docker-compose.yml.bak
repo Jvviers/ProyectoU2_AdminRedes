@@ -32,6 +32,7 @@ services:
     volumes:
       - postgres-master-data:/var/lib/postgresql/data
       - ./infrastructure/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./infrastructure/database/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
       - ./infrastructure/database/master.conf:/etc/postgresql/conf.d/master.conf
     networks:
       - database-network
@@ -62,8 +63,6 @@ services:
     depends_on:
       postgres-master:
         condition: service_started
-      pg-hba-fixer:
-        condition: service_completed_successfully
     deploy:
       resources:
         limits:
@@ -96,11 +95,9 @@ services:
       retries: 5
     depends_on:
       postgres-master:
-        condition: service_healthy
+        condition: service_started
       postgres-replica:
         condition: service_started
-      pg-hba-fixer:
-        condition: service_completed_successfully
     restart: unless-stopped
 
   redis:
@@ -126,28 +123,8 @@ services:
     restart: unless-stopped
 
   # ============================================
-  pg-hba-fixer:
-    image: postgres:15-alpine
-    container_name: pg-hba-fixer
-    environment:
-      DB_USER: ${DB_USER}
-      DB_NAME: ${DB_NAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      PGPASSWORD: ${DB_PASSWORD}
-      PGDATA: /var/lib/postgresql/data
-      REPLICATION_USER: repl_user
-      REPLICATION_PASSWORD: repl_password
-    networks:
-      - database-network
-    volumes:
-      - postgres-master-data:/var/lib/postgresql/data
-      - ./infrastructure/database/pg-hba-fixer.sh:/usr/local/bin/pg-hba-fixer.sh:ro
-    depends_on:
-      postgres-master:
-        condition: service_started
-    command: ["/bin/sh","-lc","/bin/sh /usr/local/bin/pg-hba-fixer.sh"]
-    restart: "no"
-
+  # MICROSERVICIOS BACKEND
+  # ============================================
 
   auth-service:
     build:
@@ -173,7 +150,7 @@ services:
     ports:
       - "3001:3001"
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -203,7 +180,7 @@ services:
     ports:
       - "3014:3001" # Expose on a different host port
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -229,7 +206,7 @@ services:
       - backend-network
       - database-network
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
     deploy:
       resources:
@@ -260,7 +237,7 @@ services:
     ports:
       - "3008:3002" # Expose on a different host port
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
     restart: unless-stopped
 
@@ -287,7 +264,7 @@ services:
     ports:
       - "3003:3003"
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
     restart: unless-stopped
 
@@ -314,7 +291,7 @@ services:
     ports:
       - "3009:3003" # Expose on a different host port
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
     restart: unless-stopped
 
@@ -340,7 +317,7 @@ services:
     ports:
       - "3004:3004"
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -368,7 +345,7 @@ services:
     ports:
       - "3013:3004" # Expose on a different host port
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -395,7 +372,7 @@ services:
       - backend-network
       - database-network
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
     deploy:
       resources:
@@ -427,7 +404,7 @@ services:
     ports:
       - "3011:3005" # Expose on a different host port
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
     deploy:
       resources:
@@ -475,7 +452,7 @@ services:
     ports:
       - "3006:3006"
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
     restart: unless-stopped
 
@@ -498,7 +475,7 @@ services:
     ports:
       - "3012:3006" # Expose on a different host port
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
     restart: unless-stopped
 
@@ -522,7 +499,7 @@ services:
       - database-network # To access postgres-master
     command: ["tail", "-f", "/dev/null"] # Keep container running
     depends_on:
-      postgres-master:
+      db-proxy:
         condition: service_healthy
     restart: on-failure
 
@@ -616,34 +593,6 @@ services:
           memory: 64M
     restart: unless-stopped
 
-  admin-frontend:
-    image: nginx:alpine
-    container_name: admin-frontend
-    volumes:
-      - ./services/admin-service/frontend:/usr/share/nginx/html:ro
-    networks:
-      - frontend-network
-    deploy:
-      resources:
-        limits:
-          cpus: '0.1'
-          memory: 64M
-    restart: unless-stopped
-
-  totem-frontend:
-    image: nginx:alpine
-    container_name: totem-frontend
-    volumes:
-      - ./services/totem-service/frontend:/usr/share/nginx/html:ro
-    networks:
-      - frontend-network
-    deploy:
-      resources:
-        limits:
-          cpus: '0.1'
-          memory: 64M
-    restart: unless-stopped
-
   # ============================================
   # MONITOREO
   # ============================================
@@ -712,8 +661,4 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
-
-
-
-
 

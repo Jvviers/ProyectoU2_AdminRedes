@@ -113,7 +113,17 @@ class AuthController {
         return res.status(403).json({ error: 'Usuario desactivado' });
       }
 
-      await User.updateLastAccess(user.id);
+      try {
+        await User.updateLastAccess(user.id);
+      } catch (updateError) {
+        // Postgres error code for read-only transaction
+        if (updateError.code === '25006') {
+          console.warn(`ADVERTENCIA: No se pudo actualizar la última fecha de acceso para el usuario ${user.id} debido a que la base de datos está en modo de solo lectura. El login continuará.`);
+        } else {
+          // For any other error, re-throw it to be caught by the main handler
+          throw updateError;
+        }
+      }
 
       const token = jwt.sign(
         { id: user.id, email: user.email, rol: user.rol },
