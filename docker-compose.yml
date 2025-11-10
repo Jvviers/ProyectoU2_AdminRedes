@@ -523,6 +523,8 @@ services:
     container_name: config-frontend
     volumes:
       - ./services/config-service/frontend:/usr/share/nginx/html:ro
+    ports:
+      - "80:80" # Expose config-frontend on port 80
     networks:
       - frontend-network
     deploy:
