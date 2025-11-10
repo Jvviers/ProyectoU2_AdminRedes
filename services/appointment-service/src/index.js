@@ -23,7 +23,21 @@ const app = express();
 const PORT = process.env.API_PORT || 3003;
 
 // Middlewares de seguridad
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
+      styleSrc: ["'self'", "https://cdn.jsdelivr.net"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+}));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -55,6 +69,9 @@ app.get('/metrics', async (req, res) => {
 
 // Rutas para la API de citas
 app.use('/api/appointments', appointmentRoutes);
+
+// Servir archivos estáticos del frontend
+app.use('/', express.static('frontend'));
 
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {
