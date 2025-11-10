@@ -27,9 +27,13 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REPLICATION_USER: repl_user
+      REPLICATION_PASSWORD: repl_password
     volumes:
       - postgres-master-data:/var/lib/postgresql/data
       - ./infrastructure/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./infrastructure/database/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
+      - ./infrastructure/database/master.conf:/etc/postgresql/conf.d/master.conf
     networks:
       - database-network
     ports:
@@ -47,12 +51,13 @@ services:
     restart: unless-stopped
 
   postgres-replica:
-    image: postgres:15-alpine
+    build:
+      context: ./services/postgres-replica
     container_name: postgres-replica
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REPLICATION_USER: repl_user
+      REPLICATION_PASSWORD: repl_password
     volumes:
       - postgres-replica-data:/var/lib/postgresql/data
     networks:
