@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderFuncionarioView(appContainer, user);
                 break;
             case 'ciudadano':
-                renderCiudadanoView(appContainer, user);
+                renderCiudadanoView(appContainer, user, token);
                 break;
             default:
                 renderLoggedOutView(appContainer);
@@ -87,7 +87,7 @@ function renderAdminView(container, user, token) {
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Agendar Hora</a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="http://localhost:3000" target="_blank">Agendar</a></li>
+                            <li><a class="dropdown-item" href="/agendar.html" target="_blank">Agendar</a></li>
                         </ul>
                     </li>
                     
@@ -220,6 +220,47 @@ async function fetchDashboardData(token) {
             direccionesCountCardText.textContent = 'No se pudo cargar.';
         }
     }
+
+    // Fetch and update Citas Pendientes count
+    const citasPendientesCardTitle = document.querySelector('#dashboard-content .card.bg-success .card-title');
+    const citasPendientesCardText = document.querySelector('#dashboard-content .card.bg-success .card-text');
+
+    if (citasPendientesCardTitle) {
+        citasPendientesCardTitle.textContent = 'Cargando...';
+    }
+    if (citasPendientesCardText) {
+        citasPendientesCardText.textContent = 'Obteniendo citas pendientes...';
+    }
+
+    try {
+        const response = await fetch('http://localhost:8080/api/appointments/', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const appointments = await response.json();
+        const pendingAppointments = appointments.filter(app => app.estado === 'pendiente' || app.estado === 'confirmado');
+        
+        if (citasPendientesCardTitle) {
+            citasPendientesCardTitle.textContent = pendingAppointments.length;
+        }
+        if (citasPendientesCardText) {
+            citasPendientesCardText.textContent = `Citas pendientes y confirmadas.`;
+        }
+    } catch (error) {
+        console.error('Error fetching pending appointments count:', error);
+        if (citasPendientesCardTitle) {
+            citasPendientesCardTitle.textContent = 'Error';
+        }
+        if (citasPendientesCardText) {
+            citasPendientesCardText.textContent = 'No se pudo cargar.';
+        }
+    }
 }
 
 function renderFuncionarioView(container, user) {
@@ -241,7 +282,7 @@ function renderFuncionarioView(container, user) {
     addLogoutListener(); // Re-attach listener after innerHTML update
 }
 
-function renderCiudadanoView(container, user) {
+function renderCiudadanoView(container, user, token) {
     container.innerHTML = `
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary w-100">
             <div class="container-fluid">
@@ -255,17 +296,120 @@ function renderCiudadanoView(container, user) {
         <div class="container mt-5">
             <h2>Bienvenido Ciudadano</h2>
             <p>Has iniciado sesión correctamente.</p>
+            <div class="list-group">
+              <a href="/agendar.html" class="list-group-item list-group-item-action">
+                Agendar una nueva hora
+              </a>
+              <a href="#" id="my-appointments-link" class="list-group-item list-group-item-action">Mis horas agendadas</a>
+            </div>
         </div>
     `;
     addLogoutListener(); // Re-attach listener after innerHTML update
+    const myAppointmentsLink = document.getElementById('my-appointments-link');
+    if (myAppointmentsLink) {
+        myAppointmentsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            renderMyAppointmentsView(container, user, token);
+        });
+    }
 }
 
-function renderLoggedOutView(container, message = 'Debes iniciar sesión para acceder a esta página.') {
+async function renderMyAppointmentsView(container, user, token) {
     container.innerHTML = `
-        <div class="container text-center mt-5">
-            <h1>Acceso Requerido</h1>
-            <p class="lead">${message}</p>
-            <a href="/auth/" class="btn btn-primary">Ir a Iniciar Sesión</a>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary w-100">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Municipalidad de Las Condes</a>
+                <div class="ms-auto">
+                    <span class="navbar-text me-3">Hola, ${user.email}</span>
+                    <button id="logout-btn" class="btn btn-danger">Cerrar Sesión</button>
+                </div>
+            </div>
+        </nav>
+        <div class="container mt-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Mis horas agendadas</h2>
+                <button id="back-to-home" class="btn btn-outline-secondary">Volver</button>
+            </div>
+            <div id="appointments-container" class="list-group">
+                <div class="list-group-item">Cargando mis horas...</div>
+            </div>
+        </div>
+    `;
+    addLogoutListener();
+    const backBtn = document.getElementById('back-to-home');
+    if (backBtn) backBtn.addEventListener('click', () => renderCiudadanoView(container, user, token));
+
+    try {
+        const resp = await fetch('/api/appointments/my-appointments', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const list = document.getElementById('appointments-container');
+        if (!resp.ok) {
+            const txt = await resp.text();
+            list.innerHTML = `<div class="list-group-item text-danger">Error al cargar: ${resp.status} ${txt}</div>`;
+            return;
+        }
+        const apps = await resp.json();
+        if (!Array.isArray(apps) || apps.length === 0) {
+            list.innerHTML = '<div class="list-group-item">No tienes horas agendadas.</div>';
+            return;
+        }
+        list.innerHTML = '';
+        apps.forEach(app => {
+            const fecha = app.fecha_hora ? new Date(app.fecha_hora) : null;
+            const item = document.createElement('a');
+            item.href = '#';
+            item.className = 'list-group-item list-group-item-action';
+            item.innerHTML = `
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">Servicio: ${app.servicio_id}</h6>
+                    <small>${fecha ? fecha.toLocaleDateString() + ' ' + fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</small>
+                </div>
+                <p class="mb-1">Estado: ${app.estado}</p>
+                <small>Tipo: ${app.tipo}</small>
+            `;
+            list.appendChild(item);
+        });
+    } catch (err) {
+        const list = document.getElementById('appointments-container');
+        list.innerHTML = `<div class="list-group-item text-danger">Error inesperado: ${err.message}</div>`;
+    }
+}
+
+function renderLoggedOutView(container, message = 'Bienvenido al portal de la Municipalidad de Las Condes.') {
+    container.innerHTML = `
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary w-100">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Municipalidad de Las Condes</a>
+                <div class="d-flex">
+                    <a href="/auth/" class="btn btn-light">Iniciar Sesión</a>
+                </div>
+            </div>
+        </nav>
+        <div class="container mt-5">
+            <div class="p-5 mb-4 bg-light rounded-3">
+                <div class="container-fluid py-5">
+                    <h1 class="display-5 fw-bold">Portal de Trámites</h1>
+                    <p class="col-md-8 fs-4">${message}</p>
+                </div>
+            </div>
+
+            <div class="row align-items-md-stretch">
+                <div class="col-md-6">
+                    <div class="h-100 p-5 text-bg-dark rounded-3">
+                        <h2>Agendar Hora</h2>
+                        <p>Agenda tu hora para realizar trámites de forma presencial en nuestras oficinas.</p>
+                        <a href="/auth/?redirect=/agendar.html" class="btn btn-outline-light">Agendar ahora</a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="h-100 p-5 bg-light border rounded-3">
+                        <h2>Otros Trámites</h2>
+                        <p>Consulta información sobre otros trámites y servicios disponibles en la municipalidad.</p>
+                        <button class="btn btn-outline-secondary" type="button">Ver más</button>
+                    </div>
+                </div>
+            </div>
         </div>
     `;
 }

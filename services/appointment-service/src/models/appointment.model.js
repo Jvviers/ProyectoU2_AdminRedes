@@ -98,6 +98,13 @@ class Appointment {
     const result = await pool.query(query, [id]); // Ejecutamos la consulta con el ID proporcionado
     return result.rows[0]; // Retornamos el agendamiento con estado actualizado
   }
+
+  // Método para obtener todos los servicios disponibles
+  async findAllServices() {
+    const query = 'SELECT id, nombre FROM servicios ORDER BY nombre';
+    const result = await pool.query(query);
+    return result.rows;
+  }
 }
 
 module.exports = new Appointment(); // Exportamos una instancia de la clase para usarla en otros archivos
