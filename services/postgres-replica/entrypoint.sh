@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 # Do not run if data directory is not empty (i.e., it's already a replica)
