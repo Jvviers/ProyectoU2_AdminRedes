@@ -30,7 +30,7 @@ fi
 echo "[pg-hba-fixer] Ensuring replication role exists..."
 # Use escaped $$ inside -c to avoid shell PID expansion
 psql -h postgres-master -p 5432 -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 \
-  -c "DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='${REPLICATION_USER}') THEN CREATE ROLE ${REPLICATION_USER} WITH LOGIN REPLICATION PASSWORD '${REPLICATION_PASSWORD}'; END IF; END $$;"
+  -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='${REPLICATION_USER}') THEN CREATE ROLE ${REPLICATION_USER} WITH LOGIN REPLICATION PASSWORD '${REPLICATION_PASSWORD}'; END IF; END \$\$;"
 psql -h postgres-master -p 5432 -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -c "SELECT pg_reload_conf();"
 
 echo "[pg-hba-fixer] Done."
