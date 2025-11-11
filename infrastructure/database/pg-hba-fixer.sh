@@ -19,6 +19,19 @@ done
 echo "[pg-hba-fixer] Master is ready. Patching pg_hba.conf if needed..."
 
 HBA="$PGDATA_DIR/pg_hba.conf"
+
+# Wait for pg_hba.conf to be created by postgres-master
+i=0
+while [ ! -f "$HBA" ]; do
+  i=$((i+1))
+  if [ "$i" -ge 120 ]; then
+    echo "[pg-hba-fixer] $HBA not found after 120s" >&2
+    exit 1
+  fi
+  echo "[pg-hba-fixer] Waiting for $HBA to be created... ($i)"
+  sleep 1
+done
+
 LINE="host replication ${REPLICATION_USER} 0.0.0.0/0 scram-sha-256"
 if ! grep -qF "$LINE" "$HBA" 2>/dev/null; then
   printf "%s\n" "$LINE" | cat - "$HBA" > "$HBA.new" && mv "$HBA.new" "$HBA"
@@ -30,7 +43,7 @@ fi
 echo "[pg-hba-fixer] Ensuring replication role exists..."
 # Use escaped $$ inside -c to avoid shell PID expansion
 psql -h postgres-master -p 5432 -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 \
-  -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='${REPLICATION_USER}') THEN CREATE ROLE ${REPLICATION_USER} WITH LOGIN REPLICATION PASSWORD '${REPLICATION_PASSWORD}'; END IF; END \$\$;"
+  -c "DO \$block\$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='${REPLICATION_USER}') THEN CREATE ROLE ${REPLICATION_USER} WITH LOGIN REPLICATION PASSWORD '${REPLICATION_PASSWORD}'; END IF; END \$block\$;"
 psql -h postgres-master -p 5432 -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -c "SELECT pg_reload_conf();"
 
 echo "[pg-hba-fixer] Done."

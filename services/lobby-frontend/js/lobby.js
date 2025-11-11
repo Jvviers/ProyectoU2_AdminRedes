@@ -60,7 +60,7 @@ function renderAdminView(container, user, token) {
     container.innerHTML = `
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary w-100">
             <div class="container-fluid">
-                <a class="navbar-brand" href="#">Municipalidad de Las Condes</a>
+                <a class="navbar-brand" href="#">Municipalidad de Las Condes</a>              
                 <div class="d-flex">
                     <span class="navbar-text me-3">Hola, ${user.email}</span>
                     <button id="logout-btn" class="btn btn-danger">Cerrar Sesión</button>
