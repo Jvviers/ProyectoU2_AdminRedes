@@ -1,0 +1,3 @@
+# Set line endings for specific shell scripts to LF
+scripts/** linguist-generated=true text eol=lf
+infrastructure/database/pg-hba-fixer.sh linguist-generated=true text eol=lf
