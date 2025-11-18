@@ -1,0 +1,450 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{epstopdf}
+\usepackage[margin=1in]{geometry}
+\usepackage{tocloft}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{relsize}
+\usepackage{float}
+\usepackage[spanish]{babel}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{caption}
+
+
+\title{Plataforma ERPOH: Enfermedades raras y enfoque en el paciente}
+\author{Nicolás Barahona}
+\date{2025}
+
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+% --- Portada ---
+\thispagestyle{empty}
+
+\begin{center}
+    \vspace*{5em}
+    \includegraphics[width=0.28\textwidth]{tesis_images/utalca.png}
+
+    \vspace{2em}
+
+    {\Huge\textbf{Plataforma ERPOH: Centralización, clasificación y apoyo al diagnóstico de los pacientes con Enfermedades Raras en Chile} \par}
+    \vspace{3em}
+    {\Large\textbf{Diseño de la propuesta} \par}
+\end{center}
+
+\vfill
+
+\begin{flushleft}
+{\Large Profesor Guía: Rodrigo Pavéz M.} \\[1.5em]
+{\Large Autor: Nicolás Barahona J.} \\[1.5em]
+{\Large Universidad de Talca}
+\end{flushleft}
+
+\newpage
+
+% --- Índice ---
+\renewcommand{\contentsname}{Índice}
+\renewcommand{\cftsecaftersnum}{\hspace{0.1em}.}
+\renewcommand{\cftsubsecaftersnum}{\hspace{0.1em}.}
+\renewcommand{\cftsecfont}{\bfseries \normalsize}
+\renewcommand{\cftsubsecfont}{\normalsize}
+
+\tableofcontents
+\newpage
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries}
+  {\thesection.}{1em}{}
+
+% ============================
+\section{Resumen}
+
+
+En 2025, Chile dio un paso significativo en el reconocimiento y atención de las Enfermedades Raras, poco Frecuentes o huerfanas \textit{ERPOH}, con la promulgación de la \textbf{Ley N\textsuperscript{o} 21.743 (Ley ERPOH)}, publicada el \textbf{8 de mayo de 2025}. Esta legislación establece un marco legal fundamental, que incluye la creación de un \textit{Listado de ERPOH}, un \textit{Registro Nacional} de pacientes y enfermedades, y una \textit{Comisión Técnica Asesora}, consolidando un esfuerzo estatal sin precedentes en el ámbito de las enfermedades raras \cite{diariooficial2025,bcn2025}. Sin embargo, aunque este avance legislativo marca el inicio de un enfoque institucional más claro, aún no se ha materializado una plataforma nacional que integre de manera efectiva el flujo clínico real con los estándares internacionales establecidos para el diagnóstico y seguimiento de estas patologías.
+
+Esta tesis propone la creación de una plataforma innovadora para intentar cubrir y aportar a el area mencionada, cuyo objetivo es centralizar, estandarizar y optimizar la gestión de los pacientes con ERPOH en Chile. La plataforma se articula en torno a un \textbf{doble enfoque} integral que abarca tanto al \textit{paciente} como a la \textit{patología}, fusionando dos dimensiones esenciales para la atención efectiva de estas enfermedades. En cuanto al \textit{paciente}, la plataforma facilita un \textit{registro episódico} que sigue al individuo desde la sospecha clínica hasta la confirmación diagnóstica, incorporando anotaciones fenotípicas según el sistema HPO (Human Phenotype Ontology), lo que permite un seguimiento preciso y detallado a lo largo del tiempo. Respecto a la \textit{patología}, la plataforma incluirá un \textit{catálogo de enfermedades raras}, alineado con estándares internacionales como los \textit{ORPHAcodes} y los mapeos al \textit{ICD-11}, asegurando que la información sobre las patologías sea rigurosa, actualizada y comparable con las bases de datos internacionales.
+
+La plataforma no solo centraliza la información, sino que la hace accesible a través de una arquitectura interoperable basada en el estándar \textbf{FHIR} (Fast Healthcare Interoperability Resources), lo que permite una integración eficiente con sistemas clínicos locales. Además, está conectada con repositorios internacionales clave, como \textit{Orphanet}, \textit{Orphadata}, \textit{EU-RD Platform}, \textit{GRDR}, y \textit{RDCA-DAP}, lo que posibilita el acceso a una rica base de datos sobre diagnósticos, tratamientos y estudios científicos relacionados con las ERPOH a nivel global \cite{orpha2025,orphacode2025,eurd2025,grdr2025,rdcadap2025,whoicd11faq}.
+
+La hipótesis central de esta propuesta sostiene que, al centralizar y estandarizar la información relevante sobre las ERPOH, y al proporcionar un sistema de trazabilidad y acceso a datos actualizados, se puede reducir significativamente la \textit{odisea diagnóstica} que enfrentan los pacientes con enfermedades raras. La evidencia internacional documenta que el tiempo promedio de diagnóstico de una ERPOH en Europa es de cerca de cinco años, debido a la fragmentación de la información, la falta de herramientas interoperables y la dificultad para acceder a recursos de referencia. Al implementar una plataforma que aborde estas deficiencias, se espera mejorar la calidad del diagnóstico, reducir los tiempos de espera y proporcionar un enfoque más ágil y preciso para los pacientes, los profesionales de la salud y los sistemas sanitarios en general \cite{eurordis2024,schuermans2022}.
+
+% ============================
+\section{Diseño de la propuesta}
+
+En éste apartado se describirá el contexto, decripción y propuesta de solución al problema, además de mostrar los trabajos relacionados
+
+
+\subsection{Contexto: Chile en contraste con el mundo}
+
+En el ámbito de las enfermedades raras (ER), Chile se encuentra en una fase incipiente en comparación con otros países. A nivel global, existen infraestructuras consolidadas y plataformas robustas que permiten a los profesionales de la salud acceder a información crítica y tomar decisiones informadas sobre diagnósticos y tratamientos. Sin embargo, en Chile, aún no se dispone de una plataforma nacional integrada que centralice la información sobre las enfermedades raras y poco frecuentes (ERPOH).
+
+En cuanto al marco legal, Chile ha dado un paso importante con la creación de la nueva \textbf{Ley 21.743}, que establece el \textit{Listado}, el \textit{Registro} y la \textit{Comisión Técnica Asesora} para el manejo de las enfermedades raras en el país. Esta ley, que entró en vigor en julio de 2025, marca el inicio formal del avance hacia una mejor atención y manejo de las ERPOH, pero aún no existe una plataforma nacional interoperable que capture los fenotipos y permita codificar con estándares internacionales como los \textbf{ORPHAcodes} o el sistema \textbf{HPO}. 
+
+A nivel mundial, países como Estados Unidos y los miembros de la Unión Europea han logrado avances significativos en la integración de datos clínicos de enfermedades raras a través de plataformas como \textbf{Orphanet}, \textbf{EU-RD}, y otras bases de datos que utilizan estándares como \textbf{ORPHAcodes} y \textbf{CIE-11}. Estas herramientas permiten a los profesionales de la salud acceder a información actualizada y validada sobre las enfermedades raras, facilitando el diagnóstico y el tratamiento adecuado de los pacientes.
+
+El panorama en Chile se ve marcado por la falta de una infraestructura de datos que permita la recolección de información de manera estandarizada y accesible para los médicos. Esto da lugar a un \textbf{peregrinaje médico} donde los pacientes, especialmente aquellos con enfermedades raras, atraviesan por múltiples derivaciones y visitas a diferentes especialistas antes de obtener un diagnóstico adecuado, lo que retrasa significativamente la atención y tratamiento de los pacientes.
+
+En resumen, mientras que países como Estados Unidos y las naciones europeas han establecido sistemas avanzados para el manejo de las enfermedades raras, Chile está en una etapa inicial de desarrollo, con el respaldo de nuevas leyes pero sin una infraestructura nacional que centralice y organice la información sobre las ERPOH de manera eficiente y accesible para los profesionales de la salud.
+
+\subsubsection*{Lo que hoy se hace en la práctica clínica}
+Por lo investigado hasta éste punto entendemos lo siguiente, genetistas y médicos en Chile utilizan de forma rutinaria \textbf{repositorios internacionales}, a continuación se muestran ejemplos de estos:
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{OMIM}: compendio curado de genes/fenotipos humanos, actualizado a diario \cite{omim2015nar,omimncbi}. 
+  \item \textbf{GeneReviews}: guías clínicas accionables por enfermedad hereditaria \cite{genereviews}.
+  \item \textbf{HPO}: ontología fenotípica estándar para describir y computar similitud \cite{kohler2021nar,hpo2024}.
+  \item \textbf{ClinVar}: archivo público de variantes y su relación con salud \cite{clinvar2016nar,clinvarIntro2024}.
+  \item \textbf{gnomAD}: frecuencias poblacionales para interpretar variantes \cite{gnomad2021,gudmundsson2021}.
+  \item \textbf{DECIPHER}: comparación genotipo–fenotipo y apoyo a interpretación \cite{decipher2013,decipherPortal}. 
+  \item \textbf{Orphanet/Orphadata}: conocimiento curado de ER y nomenclatura ORPHAcodes \cite{orpha2025,orphadata2024}.
+  \item \textbf{Herramientas de apoyo} (p.\,ej., \textit{Phenomizer}) basadas en similitud semántica \cite{phenomizer2009,hpoworkshop}.
+\end{itemize}
+
+\subsubsection*{Panorama internacional}
+Europa y EE.\,UU. exhiben \textbf{infraestructuras consolidadas} y con bastante apoyo:
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{EU-RD Platform/ERDRI}: visibilidad de registros y herramientas para reducir la fragmentación \cite{eurd2025,erdriLaunch}.
+  \item \textbf{GRDR (NIH/NCATS)}: integración de datos clínicos desidentificados y CDEs \cite{grdrCDE2015,grdrPortal}.
+  \item \textbf{RDCA-DAP (FDA/C-Path)}: \textit{hub} de datos/analítica para caracterización y diseño regulatorio \cite{fdaRDCA,rdcadap2025,barrett2023}.
+  \item \textbf{Codificación}: \textbf{ORPHAcodes} recomendados por la CEGRD; adopción/guías RD-CODE; mapeos a \textbf{ICD-11} \cite{rdcodeGuide,rdcodeIntro,orphaMappingsGuide,whoicd11faq,ayme2015,mazzucato2023,stateOfPlay2025}.
+\end{itemize}
+
+\subsubsection*{Situación en Chile}
+\begin{itemize}[leftmargin=1.2em]
+  \item La \textbf{Ley 21.743} crea \textit{Listado}, \textit{Registro} y \textit{Comisión Técnica Asesora} \cite{diariooficial2025,bcn2025}. Su vigencia principal inicia el \textbf{7 de julio de 2025}; el Registro se activa con norma técnica \cite{carey2025}.
+  \item Marco sanitario conexo: \textbf{Ley 20.584} (derechos del paciente) y \textbf{Ley 19.628} (protección de datos personales) \cite{ley20584bcn,ley19628bcn,ley19628dipres}. Financiamiento de alto costo vía \textbf{Ley 20.850 (Ricarte Soto)} \cite{ley20850bcn,superRicarte}.
+  \item No existe hoy un \textbf{plataforma nacional interoperable} para ER que capture fenotipos HPO y codifique con ORPHAcodes; la adopción de estándares es \textbf{incipiente} y heterogénea.
+  \item La \textbf{odisea diagnóstica} es ampliamente reportada a nivel internacional (≈5 años en Europa, variabilidad por acceso/derivación) y mencionada por prensa/organizaciones en Chile \cite{eurordis2024,eurordis2024Nat,laTercera2024,fecher2025}. Falta \textbf{medición oficial} estandarizada local.
+\end{itemize}
+
+
+\subsubsection*{Comparativa de tecnologías que se consideraron referenciales para le proyecto: OMIM, Orphanet y HPO}
+
+\begin{table}[H]
+\centering
+\caption{Comparativa entre OMIM, Orphanet y HPO}
+\renewcommand{\arraystretch}{1.5} % Ajusta el alto de las filas para mayor espacio
+\begin{tabular}{|p{3.5cm}|p{3.5cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Aspecto}           & \textbf{OMIM}                              & \textbf{Orphanet}                         & \textbf{HPO}                           \\ \hline
+\textbf{Contenido}          & Genes y fenotipos humanos                  & Enfermedades raras y genéticas            & Ontología fenotípica                   \\ \hline
+\textbf{Actualización}      & Diario                                    & Regularmente actualizado                  & Actualización periódica                 \\ \hline
+\textbf{Accesibilidad}      & Público (requiere registro)                & Público, sin registro obligatorio         & Público, libre acceso                   \\ \hline
+\textbf{Plataforma}         & Web, base de datos curada                 & Web, base de datos curada, Orphadata      & Web, ontología computable               \\ \hline
+\textbf{Estándares}         & No tiene estándares específicos definidos  & Utiliza ORPHAcodes y otras nomenclaturas   & Ontología fenotípica estándar           \\ \hline
+\textbf{Aplicación clínica} & Enfoque genético para diagnóstico          & Enfoque clínico y diagnóstico integral    & Descripción y computación de similitudes fenotípicas \\ \hline
+\textbf{Ventajas}           & Alta confiabilidad, ampliamente usado      & Amplio conocimiento sobre enfermedades raras  & Estándar para similitudes fenotípicas  \\ \hline
+\textbf{Desventajas}        & Falta de información sobre algunas enfermedades raras  & No tan accesible como OMIM en ciertos casos    & Puede carecer de suficiente información clínica detallada \\ \hline
+\end{tabular}
+\end{table}
+
+
+\subsection{Descripción del problema}
+
+El diagnóstico de las \textit{Enfermedades Raras} (ER) enfrenta múltiples desafíos tanto a nivel global como local. A nivel macro, uno de los problemas más significativos es la \textbf{demora diagnóstica y el peregrinaje médico}, en el que los pacientes experimentan una serie de derivaciones a diferentes especialistas, lo cual retrasa considerablemente el diagnóstico final. Este proceso no solo tiene un impacto clínico al generar retrasos en el tratamiento adecuado, sino que también afecta la calidad de vida del paciente y su entorno familiar, generando un alto costo psicosocial \cite{schuermans2022}.
+
+A nivel más micro, la \textbf{fragmentación} de la información clínica y la \textbf{baja trazabilidad episódica} de los datos médicos es otro reto clave. Los antecedentes de los pacientes se mantienen en sistemas no estructurados, lo que dificulta la consulta y el seguimiento de casos de manera eficiente. Esta falta de estandarización, como la ausencia de anotación fenotípica HPO o el uso de códigos ORPHAcodes, complica la recolección y análisis de datos clínicos consistentes.
+
+En cuanto a la \textbf{interoperabilidad}, la integración con estándares modernos como FHIR es débil o inexistente, lo que limita la comunicación entre los sistemas clínicos nacionales y globales. Además, la \textbf{ausencia de un catálogo nacional de ER} alineado con sistemas internacionales como Orphanet o ICD-11 hace aún más difícil la tarea de registrar, clasificar y referenciar casos de enfermedades raras de manera eficaz.
+
+Finalmente, aunque existe un marco legal vigente que establece normativas sobre el manejo de datos personales y de salud, la \textbf{gobernanza y ética de datos} aún no se encuentran completamente operativizadas. El manejo de roles, el consentimiento informado, y la seudonimización de los datos siguen siendo aspectos que requieren ser mejorados y formalizados dentro del sistema de salud, incluso cuando ya existen leyes como la \textbf{Ley 20.584} y \textbf{Ley 19.628} que regulan estos aspectos.
+
+  
+\end{itemize}
+
+\subsection{Propuesta de solución}
+\subsubsection*{Visión general}
+
+La propuesta de solución se basa en el diseño e implementación de una \textbf{plataforma dual} y \textbf{modular}, pensada para mejorar la gestión de las Enfermedades Raras, Poco Frecuentes u Huérfanas (ERPOH) en Chile. Esta plataforma tendrá un enfoque centrado tanto en el \textbf{paciente} como en las \textbf{patologías}, permitiendo una integración fluida entre el seguimiento clínico de los pacientes y el acceso a información actualizada sobre las enfermedades raras a nivel nacional e internacional. Su flexibilidad modular facilitará su implementación en diferentes contextos clínicos, asegurando su adaptación a las necesidades específicas de los médicos y otros profesionales de la salud.
+
+La plataforma estará estructurada en dos módulos clave: \textbf{Módulo Paciente (episódico)} y \textbf{Módulo Patología}, los cuales se detallan a continuación.
+
+\begin{enumerate}[leftmargin=1.2em]
+
+  \item \textbf{Módulo Paciente (episódico)}:  
+  Este módulo está diseñado para registrar de manera detallada el \textbf{seguimiento clínico} de los pacientes, utilizando un enfoque episódico que permite documentar el proceso desde la \textit{sospecha inicial} de una ERPOH hasta su \textit{confirmación final}. El registro de cada episodio clínico incluirá una serie de campos estandarizados en los cuales el médico podrá ir añadiendo los hallazgos y resultados a medida que avanza el diagnóstico. La plataforma proporcionará \textbf{anotaciones HPO} asistidas, facilitando la tarea de introducir los fenotipos observados en el paciente mediante un sistema de \textbf{autocompletado} y \textbf{sugerencias} basadas en la base de datos de HPO (Human Phenotype Ontology). De esta forma, los clínicos podrán seleccionar fácilmente los fenotipos más relevantes, sin necesidad de buscar información manualmente, lo que agiliza el proceso de registro y aumenta la precisión de los datos.  
+   
+  Además, el módulo incluirá una herramienta de \textbf{apoyo a la decisión} que utilizará la similitud fenotípica para sugerir diagnósticos diferenciales. Este sistema estará enlazado a herramientas externas como \textbf{Phenomizer} o sus homólogos, que permiten realizar búsquedas basadas en los fenotipos introducidos por el médico y obtener posibles enfermedades asociadas. Este enfoque no solo mejora la precisión diagnóstica, sino que también ayuda a los médicos a explorar diagnósticos menos comunes pero igualmente relevantes. Al integrar esta funcionalidad, el sistema ofrecerá un \textbf{apoyo proactivo}, alertando sobre posibles ERPOH que el clínico podría no haber considerado inicialmente, facilitando así una detección temprana y mejorando la calidad del diagnóstico.
+
+  \item \textbf{Módulo Patología}:  
+  El \textbf{Módulo Patología} estará centrado en el \textbf{catálogo de enfermedades raras} disponible en la plataforma. Esta base de datos estará compuesta por información exhaustiva sobre las ERPOH, utilizando códigos internacionales como \textbf{ORPHAcodes} y su \textbf{mapeo a ICD-11} (Clasificación Internacional de Enfermedades, versión 11), lo que garantizará que los datos sobre las patologías sean estandarizados y puedan ser fácilmente comparables a nivel global. Este módulo permitirá a los médicos consultar la base de datos para obtener información detallada sobre cada enfermedad rara, incluyendo sus \textit{síntomas}, \textit{genética asociada}, \textit{diagnóstico diferencial}, \textit{tratamientos recomendados}, y más. 
+
+  Además, el módulo incluirá enlaces directos a recursos externos de confianza, como \textbf{Orphanet} y \textbf{Orphadata}, para que los médicos puedan acceder a información adicional y actualizada sobre las enfermedades raras. Estos recursos son fundamentales para mantener a los profesionales de la salud al día con las últimas investigaciones y avances en el campo de las enfermedades huérfanas. El módulo también proporcionará información sobre la \textbf{prevalencia} de cada patología tanto a nivel nacional como internacional, ayudando a los médicos a contextualizar mejor los casos que están tratando y a tomar decisiones informadas basadas en datos estadísticos.
+
+  Un aspecto clave de este módulo es que incluirá información sobre los \textbf{centros de referencia} en Chile y en el extranjero, que están especializados en el diagnóstico y tratamiento de las ERPOH. De este modo, cuando un médico tenga dudas sobre cómo abordar un caso complejo, podrá acceder rápidamente a una lista de instituciones que tienen experiencia en el manejo de la enfermedad en cuestión, facilitando las derivaciones y el acceso a atención especializada.
+
+\end{enumerate}
+
+
+El principal enfoque de la plataforma es optimizar tanto el diagnóstico como el seguimiento de las ERPOH. A través del \textbf{Módulo Paciente (episódico)}, los médicos podrán realizar un seguimiento continuo y estructurado de cada paciente, registrando cada hallazgo y evolución a lo largo del tiempo. Este enfoque episódico es crucial en el contexto de las enfermedades raras, ya que el diagnóstico a menudo es un proceso largo y complejo, que requiere de una documentación detallada y accesible para asegurar que no se pierdan detalles importantes. 
+
+El \textbf{Módulo Patología}, por su parte, asegura que los médicos tengan acceso a una base de datos completa y estandarizada de las enfermedades raras, mejorando la precisión de sus diagnósticos. La integración con herramientas como \textbf{ORPHAcodes}, \textbf{ICD-11}, y bases de datos internacionales como \textbf{Orphanet} proporciona un enfoque global y actualizado sobre las patologías, lo que permite a los médicos acceder a información relevante y útil sin necesidad de recurrir a múltiples fuentes dispersas. 
+
+
+Esta plataforma ofrece una amplia gama de posibilidades que transformarán la forma en que los médicos diagnostican y tratan las ERPOH en Chile. A continuación, se describen algunos de los beneficios clave:
+
+1. \textbf{Mejora del diagnóstico temprano}: El uso de herramientas de similitud fenotípica y apoyo a la decisión permitirá detectar enfermedades raras en etapas tempranas, lo que es fundamental para mejorar el pronóstico de los pacientes.
+
+2. \textbf{Optimización del flujo de trabajo}: La plataforma reducirá el tiempo dedicado a la búsqueda manual de información, gracias a las funcionalidades de autocompletado y sugerencias inteligentes. Esto permitirá a los médicos concentrarse más en el análisis clínico y menos en la recopilación de datos.
+
+3. \textbf{Integración con otros sistemas de salud}: Gracias a su enfoque modular y su compatibilidad con estándares como \textbf{FHIR}, la plataforma podrá integrarse con otros sistemas de registros de salud electrónicos (EHR), asegurando que los datos del paciente fluyan de manera eficiente y segura.
+
+4. \textbf{Acceso a recursos internacionales}: Con enlaces a bases de datos como \textbf{Orphanet} y \textbf{OMIM}, los médicos podrán mantenerse al día con la información más reciente sobre las enfermedades raras, garantizando que tengan acceso a recursos globales sin salir de la plataforma.
+
+5. \textbf{Facilitación de derivaciones y atención especializada}: El módulo de \textbf{centros de referencia} permitirá a los médicos derivar a los pacientes a instituciones especializadas en caso de ser necesario, lo que facilitará la atención integral y mejorará los resultados de los pacientes.
+
+En resumen, la plataforma propuesta es una herramienta poderosa que combina un enfoque estructurado para el seguimiento de pacientes con un acceso centralizado y estandarizado a información sobre enfermedades raras, optimizando el proceso diagnóstico y mejorando la atención clínica de las ERPOH en Chile.
+
+
+ 
+
+\subsection{Trabajo relacionado}
+A continuación se muestran algunos de las plataformas que han cubierto ésta área
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{EU-RD/ERDRI}: catálogo de registros, metadatos comunes, búsqueda federada
+  \item \textbf{GRDR}: CDEs y repositorio global (NCATS) 
+  \item \textbf{RDCA-DAP}: plataforma FDA/C-Path para datos de ER 
+  \item \textbf{Orphanet/ORPHAcodes}: nomenclatura y guías RD-CODE \cite{orpha2025}.
+  \item \textbf{HPO}: estándar fenotípico y herramientas \cite{kohler2021nar,hpo2024}.
+\end{itemize}
+
+% ============================
+\section{Objetivos}
+
+Los objetivos de este proyecto están diseñados para establecer las metas clave que guiarán el desarrollo de la plataforma ERPOH, asegurando que se aborden de manera efectiva las necesidades de los usuarios, las consideraciones técnicas y seguridad. A continuación, se detallan los objetivos generales y específicos que orientarán el desarrollo y la evaluación de la plataforma.
+
+\subsection{Objetivo general}
+
+La plataforma ERPOH tiene como objetivo desarrollar una plataforma y base de datos integral con dos enfoques clave: el seguimiento clínico de los pacientes y el catalogado de enfermedades. En cuanto al paciente, se ofrecerá un seguimiento detallado y episódico desde la sospecha hasta la confirmación del diagnóstico. Respecto a las enfermedades, se creará un catálogo basado en información internacional y APIs, con la capacidad de integrar datos nacionales relevantes, asegurando una solución escalable y adaptable a las necesidades locales.
+
+\subsection{Objetivos específicos}
+
+\begin{itemize}[leftmargin=1.2em]
+
+\item \textbf{Investigar y analizar el CIE-11, ORPHAcodes, OMIM y otros sistemas de codificación internacionales}:
+El objetivo de este paso es realizar una investigación exhaustiva sobre los principales sistemas de codificación utilizados para clasificar las enfermedades raras. En particular, se estudiarán el \textit{CIE-11} (Clasificación Internacional de Enfermedades), \textit{ORPHAcodes} y \textit{OMIM} (Online Mendelian Inheritance in Man). El \textit{OMIM} es una base de datos clave para las enfermedades genéticas, ofreciendo información detallada sobre genes asociados y fenotipos clínicos. Esta investigación tiene como fin comprender cómo cada uno de estos sistemas puede ser integrado eficazmente en el contexto chileno y para el seguimiento de las ERPOH. La meta es asegurar que los clínicos puedan acceder a una base de datos bien estructurada, que combine los códigos internacionales con la información específica de las ERPOH, para apoyar la precisión diagnóstica. 
+
+\item \textbf{Investigar APIs para interoperabilidad con sistemas de salud y repositorios internacionales}:
+Este objetivo se centra en investigar y seleccionar las mejores APIs (Interfaces de Programación de Aplicaciones) disponibles que permitan la interoperabilidad entre la plataforma propuesta y los sistemas de salud existentes. Se explorarán APIs basadas en el estándar \textit{FHIR} (Fast Healthcare Interoperability Resources), que es el marco más utilizado para la integración de registros de salud electrónicos (EHR). La investigación incluirá una evaluación de las APIs necesarias para conectar la plataforma con repositorios internacionales como \textit{Orphanet}, \textit{Orphadata}, \textit{OMIM} entre otros sistemas clave para las ERPOH. Esta fase también analizará las mejores prácticas de integración, con el objetivo de garantizar que la plataforma pueda compartir y recibir datos de manera eficiente, segura y conforme a los estándares internacionales.
+
+\item \textbf{Seleccionar las APIs y sistemas de codificación a implementar}:
+En esta etapa, se tomarán decisiones sobre qué APIs y códigos de clasificación (CIE-11, ORPHAcodes, OMIM, etc.) se utilizarán en la plataforma. El proceso incluirá la evaluación de la fiabilidad, cobertura y adaptabilidad de cada uno de estos sistemas, considerando las necesidades específicas del contexto chileno y de las enfermedades raras. Se seleccionarán aquellos que mejor se alineen con los objetivos de la plataforma, proporcionando un sistema de diagnóstico preciso y que sea accesible tanto para clínicos como para investigadores. Asimismo, se establecerá un plan de implementación para integrar estos sistemas de manera fluida y eficiente en la infraestructura de la plataforma.
+
+\item \textbf{Desarrollar la plataforma, comenzando con el módulo paciente y el módulo enfermedad}:
+El objetivo principal de esta etapa es iniciar el desarrollo técnico de la plataforma. En particular, se comenzará con el diseño e implementación de dos módulos clave: el \textit{módulo paciente}, que permitirá el registro de los pacientes y el seguimiento de su diagnóstico desde la sospecha clínica hasta la confirmación, y el \textit{módulo enfermedad}, que gestionará el catálogo de enfermedades raras, su clasificación y codificación. Estos módulos estarán diseñados para garantizar la integridad y la precisión de la información, y para facilitar su consulta de manera intuitiva por los profesionales de la salud. Durante este proceso, se integrarán las bases de datos y sistemas de codificación seleccionados previamente, asegurando una estructura que sea robusta, escalable y compatible con el entorno clínico.
+
+\item \textbf{Validar la usabilidad de la plataforma con usuarios finales (médicos, clínicos)}:
+Una vez que la plataforma esté en una etapa avanzada de desarrollo, se llevará a cabo una validación exhaustiva de su usabilidad. Este objetivo implica realizar pruebas con médicos y otros profesionales de la salud que serán los usuarios finales de la plataforma. Se buscará evaluar la facilidad de uso, la eficacia en el flujo de trabajo, la accesibilidad de la información y la funcionalidad general de la plataforma en un entorno clínico real. Se recopilará retroalimentación detallada sobre la experiencia de los usuarios para identificar áreas de mejora y optimización. Esta etapa será crucial para garantizar que la plataforma sea intuitiva, eficiente y que realmente aporte valor en el proceso diagnóstico y en la atención de los pacientes con ERPOH.
+
+\end{itemize}
+% ============================
+\section{Alcances}
+
+El desarrollo y la implementación de la plataforma para centralizar la información sobre las Enfermedades Raras, Poco Frecuentes o Huérfanas (ERPOH) en Chile abarcará diversos aspectos clave que asegurarán su funcionalidad, interoperabilidad y utilidad para los profesionales de la salud. A continuación, se detallan los alcances específicos del proyecto, los cuales comprenden tanto la creación de módulos esenciales como la integración de tecnologías avanzadas para facilitar el diagnóstico, seguimiento y gestión de las ERPOH:
+
+\begin{itemize}[leftmargin=1.2em]
+
+\item \textbf{Plataforma web para crear  "Sospechas de ERPOH"}:
+Una de las funcionalidades clave de la plataforma será permitir que los médicos creen y gestionen de manera eficiente "sospechas de ERPOH" a través de un módulo específico. Este módulo consistirá en un formulario de ingreso donde los clínicos podrán introducir información clave sobre el paciente, como signos, síntomas y antecedentes clínicos relevantes, que servirán como base para registrar la sospecha de enfermedad rara. La plataforma no solo permitirá ingresar estos datos de forma estructurada, sino que también ofrecerá la posibilidad de actualizar la información conforme el paciente sea evaluado más a fondo. El sistema almacenará las sospechas de manera organizada, permitiendo un seguimiento detallado de cada paciente y facilitando la continuidad en el proceso diagnóstico. Esta herramienta permitirá que el médico gestione de manera sistemática las sospechas de ERPOH, asegurando que todos los detalles del caso se registren de forma ordenada y fácil de consultar, y se podrá acceder a este historial a lo largo del seguimiento del paciente.
+
+\item \textbf{Buscador de ERPOH para búsqueda de enfermedades raras}:
+La plataforma contará con un potente buscador diseñado para facilitar a los médicos la identificación de posibles enfermedades raras basadas en diferentes criterios, tales como fenotipos, códigos de diagnóstico (como ORPHAcodes y CIE-11), y otras características clave de las patologías. Esta herramienta permitirá a los profesionales realizar búsquedas rápidas y precisas de enfermedades raras que coincidan con los signos clínicos observados en el paciente. El visor que acompañará este buscador mostrará información detallada sobre cada enfermedad, incluyendo los síntomas comunes, los diagnósticos diferenciales, los genes asociados a la patología, y recursos disponibles para el manejo y tratamiento. Al integrar tanto datos globales como nacionales sobre ERPOH, el visor proporcionará una visión completa que contribuirá a mejorar la precisión diagnóstica y optimizar la toma de decisiones clínicas, facilitando que los médicos encuentren la mejor aproximación a la enfermedad rara que puedan estar tratando.
+
+\item \textbf{Registro episódico de los avances en el diagnóstico}:
+La plataforma incorporará una funcionalidad que permitirá a los médicos registrar de manera detallada los avances en el diagnóstico de los pacientes con ERPOH, utilizando un enfoque episódico. Cada vez que se realicen evaluaciones adicionales o se obtenga nueva información sobre el paciente, los médicos podrán documentar las observaciones, pruebas realizadas y cualquier cambio en el estado del paciente, todo dentro de un formato estructurado. Esta funcionalidad permitirá mantener el historial del paciente actualizado y fácilmente accesible en todo momento, lo cual es crucial para un seguimiento continuo y para garantizar que no se pierda información relevante durante el proceso diagnóstico. A través del "historial clínico" de la plataforma, los médicos podrán consultar fácilmente las decisiones previas y las evaluaciones anteriores, lo que mejorará la trazabilidad de los datos clínicos y reducirá la posibilidad de errores diagnósticos. Esta característica ayudará a que los médicos tengan un registro completo y claro del avance del diagnóstico y seguimiento de cada paciente, optimizando la calidad del cuidado brindado.
+
+\item \textbf{MVP (Producto Mínimo Viable)}:
+El MVP de la plataforma se centrará en el desarrollo de tres funcionalidades clave que permitan su funcionamiento inicial: la ficha episódica del paciente, el buscador de enfermedades basado en HPO (Human Phenotype Ontology), y un catálogo de enfermedades raras que esté integrado con ORPHAcodes y sus correspondientes mapeos con CIE-11. La ficha episódica será el componente central, permitiendo a los médicos registrar la información de cada paciente a lo largo del tiempo, con un formato estandarizado que facilite el acceso a los datos y su interpretación. La plataforma también contará con un buscador que permitirá realizar búsquedas rápidas de enfermedades raras basadas en características fenotípicas y códigos diagnósticos, y el catálogo de enfermedades permitirá acceder a información detallada sobre las patologías. El objetivo de este MVP será proporcionar a los médicos herramientas básicas pero efectivas que les permitan registrar y consultar información sobre los pacientes y las enfermedades raras, de manera que puedan iniciar el proceso diagnóstico de forma más precisa y estructurada.
+
+\item \textbf{Interoperabilidad mediante FHIR (R4) y guías para integración con EHR}:
+Para garantizar que la plataforma sea compatible con los sistemas de salud existentes, se utilizará el estándar FHIR (Fast Healthcare Interoperability Resources) versión R4. Este estándar permitirá que los datos del paciente fluyan de manera segura y eficiente entre la plataforma ERPOH-CL y otros sistemas de registros electrónicos de salud (EHR) ya implementados en hospitales y clínicas. La plataforma contará con endpoints FHIR que permitirán la integración fluida de los datos clínicos, como diagnósticos, antecedentes médicos y tratamientos, con otros sistemas médicos que también utilicen este estándar. Además, se proporcionarán guías detalladas que orientarán sobre cómo integrar la plataforma con otros sistemas de gestión de datos médicos, asegurando que los profesionales de la salud puedan acceder a la información de los pacientes de manera sencilla y sin problemas de compatibilidad. Esta interoperabilidad garantizará una mayor colaboración entre los diferentes actores del sistema de salud, mejorando la eficiencia del intercambio de datos y, en última instancia, la calidad del cuidado del paciente.
+
+\item \textbf{Seguridad}: Se garantizará que la plataforma cumpla con las normativas mínimas de seguridad para proteger la confidencialidad, integridad y disponibilidad de los datos del paciente, implementando prácticas de seguridad que aseguren un manejo adecuado de la información sensible sin comprometer la experiencia del usuario.
+
+
+
+\end{itemize}
+
+% ============================
+\section{Metodologías}
+
+\subsection{Metodología de Investigación}
+En este proyecto, se utilizará el \textbf{Enfoque de Ciencia de Diseño (DSR)} combinado con métodos mixtos** para abordar tanto la parte técnica como las necesidades clínicas del sistema que se desarrollará.
+
+El enfoque de Ciencia de Diseño (DSR) es un marco que busca resolver problemas a través del diseño y desarrollo de soluciones innovadoras, evaluándolas y comunicando los resultados. El proceso sigue varios pasos:
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{Marco DSR}: El proceso comienza con la identificación del problema, seguida por la definición de los objetivos. A continuación, se diseñan y desarrollan las soluciones, que se demuestran, se evalúan y finalmente se comunican los resultados de la investigación.
+  \item \textbf{Levantamiento cualitativo}: Se realizarán entrevistas semiestructuradas a genetistas, médicos de atención primaria, enfermeros y gestores para comprender mejor los requerimientos del sistema desde la perspectiva clínica.
+  \item \textbf{Revisión sistemática breve}: Se realizará una revisión de herramientas y estándares relevantes para el proyecto, como OMIM, HPO, ORPHAcodes, FHIR, entre otros, para asegurar que la plataforma se base en las mejores prácticas y estándares internacionales.
+  \item \textbf{Evaluación formativa}: Se utilizará el método de \textit{cognitive walkthrough} para evaluar los flujos clave de la plataforma, asegurando que los usuarios comprendan fácilmente las interfaces.
+  \item \textbf{Evaluación sumativa}: Para medir el impacto y la efectividad del sistema, se implementarán herramientas como el \textbf{SUS}, que permitirán obtener retroalimentación sobre la experiencia de usuario.
+  \item \textbf{Métrica de efectividad}: Se medirá el tiempo para completar tareas específicas, como el registro de sospechas y la obtención de diagnósticos diferenciales. También se evaluará la concordancia diagnóstica y el número de fenotipos HPO capturados en cada episodio.
+  \item \textbf{Ética y datos}: La protección de la privacidad y los derechos de los pacientes será una prioridad, siguiendo la Ley 20.584/19.628 sobre protección de datos y garantizando el consentimiento informado y la seudonimización de los datos.
+\end{itemize}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{tesis_images/DSR.png}
+    \caption{Imagen oficial del enfoque de Ciencia de Diseño (DSR)}
+\end{figure}
+
+
+
+
+
+\subsection{Metodologías de Desarrollo}
+El desarrollo de la plataforma se llevará a cabo utilizando la metodología \textbf{Personal Extreme Programming (PXP)}. Este enfoque está basado en los principios de \textbf{Extreme Programming (XP)}, pero adaptados para un solo desarrollador, permitiendo un proceso altamente eficiente y enfocado en la calidad del código, la simplicidad y las pruebas continuas.
+
+El proceso de desarrollo incluirá:
+\begin{enumerate}[leftmargin=1.2em]
+  \item \textbf{Desarrollo basado en pruebas (TDD)}: Se comenzará cada ciclo de desarrollo escribiendo pruebas automatizadas que definan cómo debe comportarse el código, para luego escribir el código necesario para hacer que las pruebas pasen. Este enfoque garantiza que el software cumpla con los requisitos desde el inicio.
+  \item \textbf{Refactorización continua}: A medida que se desarrollan nuevas funcionalidades, se refactorizará constantemente el código para mejorar su estructura, eliminar duplicados y hacer que sea más modular y fácil de mantener. Este proceso garantiza que el código se mantenga limpio y flexible a medida que el proyecto avanza.
+  \item \textbf{Diseño simple y enfocado}: Se priorizará un diseño simple, donde se resuelvan los problemas de la manera más directa y eficiente posible, sin añadir complejidad innecesaria. Se evita el sobre-diseño, centrándose en lo que realmente es necesario para cumplir con los requisitos.
+  \item \textbf{Pruebas automatizadas}: La ejecución de pruebas unitarias y de integración será continua, garantizando que cada parte del sistema esté correctamente testeada y que cualquier cambio en el código no rompa funcionalidades existentes.
+  \item \textbf{Integración continua}: A cada paso, se integrará el código con el sistema global, asegurando que las nuevas funcionalidades se sumen sin conflictos y se validen continuamente con las pruebas automáticas.
+  \item \textbf{Feedback constante}: El feedback se obtiene principalmente de las pruebas automáticas, que permiten detectar errores temprano y asegurar que el código esté siempre alineado con los objetivos del proyecto. También se fomenta la autoevaluación constante a través de la refactorización y las pruebas.
+  \item \textbf{Implementación de MVP}: Se desarrollará un Producto Mínimo Viable (MVP), que incluirá una versión funcional de la plataforma y servicios de API REST/FHIR, con pruebas continuas y validaciones para asegurar que cada funcionalidad esté probada desde el inicio.
+  \item \textbf{Seguridad y Calidad}: Se implementarán controles de seguridad, como roles de usuario y auditorías, junto con linters y validaciones automáticas para garantizar la calidad del código y la seguridad del sistema en todo momento.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{tesis_images/pxp.png}
+    \caption{Metodologío Personal Extreme Programming (PXP)}
+\end{figure}
+
+\subsection{Metodologías de Evaluación}
+Para medir el rendimiento del sistema, se utilizará una encuesta sencilla que responderán los clínicos que usen la plataforma. La encuesta se centrará en tres áreas clave: el rendimiento técnico, la usabilidad y la efectividad clínica.
+
+\begin{itemize}[leftmargin=1.2em]
+\item \textbf{Técnico}: Se medirán indicadores clave para evaluar el rendimiento del sistema en términos de fiabilidad, eficiencia y precisión. Estos indicadores incluyen:
+  \begin{itemize}[leftmargin=1.2em]
+    \item \textbf{Disponibilidad de la API (Uptime)}: Se medirá el tiempo durante el cual la API está disponible y funcional. Esto se hará utilizando herramientas de monitoreo que registren el tiempo de actividad (uptime) y el tiempo de inactividad (downtime) de la API. 
+    
+    \item \textbf{Latencia}: La latencia se medirá observando el tiempo que tarda en procesarse una solicitud desde que el cliente hace la petición hasta que recibe una respuesta. Esto se puede medir con herramientas que envíen solicitudes de prueba a la API y registren el tiempo que toma la respuesta. La latencia ideal es la más baja posible, y se puede establecer un límite máximo para garantizar que la plataforma no se vuelva lenta o poco funcional para los usuarios.
+
+    \item \textbf{Integridad de los campos}: Se medirá si todos los campos requeridos para el registro de los datos están siendo completados correctamente y si los datos se almacenan sin errores. Esto se puede hacer mediante validaciones automatizadas, donde se revisan las entradas de los usuarios en el sistema y se verifican contra las reglas de validación predefinidas. Si un campo obligatorio no se completa o se ingresa un valor incorrecto, el sistema debe rechazar la entrada y notificar al usuario para corregirla.
+
+    \item \textbf{Cobertura de los códigos (HPO, ORPHA, CIE-11)}: La cobertura de los códigos se medirá verificando si los códigos de enfermedades raras, como HPO, ORPHA y ICD-11, están siendo utilizados correctamente en las entradas de los pacientes y si se cumplen con los estándares internacionales. Esto se puede medir mediante la comparación de los registros ingresados con las bases de datos de estos sistemas de codificación. Se realizarán pruebas para asegurar que los códigos correctos se asocian a las condiciones de salud adecuadas, mejorando la precisión de la plataforma.
+  \end{itemize}
+
+  \item \textbf{Usabilidad}: A través de una encuesta System Usability Scale (SUS), se evaluará qué tan fácil es para los usuarios (clínicos) navegar por la plataforma, registrando su experiencia con preguntas sobre la facilidad de uso, la claridad de las interfaces y la rapidez de las tareas. Esta evaluación puede hacerse con una escala de Likert, donde el clínico puntúe del 1 al 5.
+
+La encuesta permitirá recopilar comentarios tanto cualitativos como cuantitativos, lo que facilitará la mejora continua del sistema. 
+
+  \item \textbf{Seguridad}: Se medirán los siguientes indicadores básicos de seguridad:
+
+  \begin{itemize}[leftmargin=1.2em]
+    \item \textbf{Control de acceso}: Verificar que solo los usuarios autorizados tengan acceso a datos sensibles.
+    \item \textbf{Encriptación de datos}: Comprobar que los datos estén encriptados tanto en tránsito como en reposo.
+    \item \textbf{Auditoría básica}: Mantener un registro de accesos y acciones importantes dentro de la plataforma.
+  \end{itemize}
+
+
+\end{itemize}
+
+
+
+
+% ============================
+\section{Plan de trabajo}
+
+\subsection{Descripción de etapas del proyecto}
+
+Para desarrollar el proyecto se llevarán a cabo 3 etapas grandes, con tareas y subtareas dentro de cada una, las etapas son \textbf{Investigación, Desarrollo, Evaluación}
+\begin{enumerate}[leftmargin=1.2em]
+  \item \textbf{E1. Investigación}:
+    \begin{itemize}
+        \item Revisión del estado del arte.
+        \item Investigación sobre la codificación para asegurar la interoperabilidad.
+        \item Definición concreta del alcance de la plataforma.
+        \item Investigación de bases de datos e información sobre enfermedades raras, tanto a nivel nacional como internacional.
+    \end{itemize}
+
+  \item \textbf{E2. Desarrollo}:
+    \begin{itemize}
+        \item Creación del módulo de paciente: desarrollo de una interfaz para gestionar la información clínica del paciente.
+        \item Creación del módulo de enfermedades raras: implementación de un catálogo con enfermedades raras, sus características y asociaciones con el paciente.
+    \end{itemize}
+  
+  \item \textbf{E3. Evaluación}:
+    \begin{itemize}
+        \item Pruebas de casos de uso: validación de las funcionalidades de la plataforma con escenarios reales.
+        \item Recepción de feedback: análisis de comentarios de usuarios y pruebas de usabilidad para optimizar el sistema.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Tareas para objetivos específicos}
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{OE1 (Investigación y análisis de sistemas de codificación)}: Investigar y analizar el CIE-11, ORPHAcodes, OMIM y otros sistemas de codificación internacionales para comprender su aplicabilidad y conexión con enfermedades raras.
+  \item \textbf{OE2 (Interoperabilidad)}: Investigar y seleccionar APIs para la interoperabilidad con sistemas de salud y repositorios internacionales, con el objetivo de integrar estos recursos en la plataforma.
+  \item \textbf{OE3 (Selección de APIs y sistemas de codificación)}: Evaluar y seleccionar las APIs y sistemas de codificación que se implementarán para garantizar la compatibilidad con los estándares internacionales.
+  \item \textbf{OE4 (Desarrollo de la plataforma)}: Desarrollar la plataforma ERPOH comenzando con la implementación de los módulos de paciente y enfermedad, siguiendo un enfoque modular y escalable.
+  \item \textbf{OE5 (Validación de la plataforma)}: Validar la usabilidad de la plataforma con usuarios finales (médicos, clínicos), recopilando feedback para optimizar la experiencia de usuario y las funcionalidades del sistema.
+\end{itemize}
+
+
+
+
+\subsection{Planificación detallada}
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{Semana 1-7 (2025-2): Investigación y diseño inicial}
+    \begin{itemize}
+        \item Revisión de literatura y estado del arte.
+        \item Análisis de necesidades del sistema.
+        \item Definición del alcance de la plataforma ERPOH.
+        \item Diseño de UI/UX y validación de diseños.
+        \item Diseño de la arquitectura de base de datos.
+    \end{itemize}
+
+  \item \textbf{Semana 8-15 (2025-2) y 1-12 (2026-1): Desarrollo inicial y pruebas}
+    \begin{itemize}
+        \item Desarrollo de módulos de enfermedades y paciente.
+        \item Integración de módulos y pruebas internas.
+        \item Módulo de integraciones con sistemas externos.
+        \item Pruebas de integración y evaluación de desempeño.
+    \end{itemize}
+
+  \item \textbf{Semana 13-15 (2026-1): Implementación final y validación}
+    \begin{itemize}
+
+        \item Evaluaciones de desempeño.
+                \item Conclusiones
+        \item Redacción y entrega final.
+    \end{itemize}
+\end{itemize}
+
+\textit{Para más detalles sobre las tareas y cronograma, consultar la Carta Gantt.}
+
+% ============================
+\section{Bibliografía}
+\addto\captionsspanish{\renewcommand{\refname}{Referencias}}
+
+\begin{thebibliography}{99}
+
+% Marco legal y Chile
+\bibitem{diariooficial2025} Diario Oficial de la República de Chile. \textit{Ley N\textsuperscript{o} 21.743} (08-05-2025). \url{https://www.diariooficial.interior.gob.cl/publicaciones/2025/05/08/44143/01/2643114.pdf}
+\bibitem{bcn2025} BCN Chile. \textit{Ley 21.743 – Enfermedades poco frecuentes, raras o huérfanas}. \url{https://www.bcn.cl/leychile/navegar?idNorma=1213122}
+
+% Estándares y plataformas
+\bibitem{orpha2025} Orphanet. \textit{Portal Orphanet}. \url{https://www.orpha.net/}
+\bibitem{orphacode2025} RD-CODE/Orphanet. \textit{ORPHAcodes adoption \& guidance}. \url{https://www.rd-code.eu/introduction/}
+
+% HPO y herramientas
+\bibitem{kohler2021nar} Köhler S. et al. \textit{The Human Phenotype Ontology in 2021}. NAR (2021). \url{https://academic.oup.com/nar/article/49/D1/D1207/6017351}
+\bibitem{hpo2024} Gargano M. et al. \textit{The HPO in 2024}. \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC10767975/}
+
+% Odisea diagnóstica
+\bibitem{schuermans2022} Schuermans N. \textit{Shortcutting the diagnostic odyssey}. iScience (2022). \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC9128245/}
+\bibitem{eurordis2024} EURORDIS. \textit{Rare Barometer – diagnosis}. \url{https://www.eurordis.org/our-priorities/diagnosis/}
+
+\end{thebibliography}
+
+\end{document}
