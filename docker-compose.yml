@@ -535,8 +535,10 @@ services:
     container_name: api-gateway
     volumes:
       - ./services/api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./services/api-gateway/certs:/etc/nginx/certs:ro
     ports:
       - "8080:80"
+      - "8443:443"
     networks:
       - frontend-network
       - backend-network

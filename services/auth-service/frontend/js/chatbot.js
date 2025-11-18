@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chatbot-messages');
 
     // API endpoint del chatbot
-    const API_URL = 'http://localhost:8080/api/ai/chat';
+    const API_URL = `${window.location.origin}/api/ai/chat`;
 
     // Mostrar/Ocultar el chatbot
     openBtn.addEventListener('click', () => {
