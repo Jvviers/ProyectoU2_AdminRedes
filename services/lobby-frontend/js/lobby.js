@@ -155,7 +155,7 @@ async function fetchDashboardData(token) {
     }
 
     try {
-        const response = await fetch('http://localhost:8080/api/auth/users', {
+        const response = await fetch(`${window.location.origin}/api/auth/users`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -194,7 +194,7 @@ async function fetchDashboardData(token) {
     }
 
     try {
-        const response = await fetch('http://localhost:8080/api/config/direcciones', {
+        const response = await fetch(`${window.location.origin}/api/config/direcciones`, {
             headers: {
                 'Authorization': `Bearer ${token}` // Assuming config-service also requires auth
             }
@@ -233,7 +233,7 @@ async function fetchDashboardData(token) {
     }
 
     try {
-        const response = await fetch('http://localhost:8080/api/appointments/', {
+        const response = await fetch(`${window.location.origin}/api/appointments/`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

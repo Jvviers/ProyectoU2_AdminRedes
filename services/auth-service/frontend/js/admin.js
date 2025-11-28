@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    const API_BASE = `${window.location.origin}/api`;
     const token = localStorage.getItem('token');
     const messageDiv = document.getElementById('message');
     const userListDiv = document.getElementById('user-list');
@@ -10,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // 1. Verificar el token y el rol del usuario
-        const verifyResponse = await fetch('http://localhost:8080/api/auth/verify-token', {
+        const verifyResponse = await fetch(`${API_BASE}/auth/verify-token`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -26,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // 2. Si es admin, obtener la lista de usuarios
-        const usersResponse = await fetch('http://localhost:8080/api/auth/users', {
+        const usersResponse = await fetch(`${API_BASE}/auth/users`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

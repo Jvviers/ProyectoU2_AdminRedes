@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-# Do not run if data directory is not empty (i.e., it's already a replica)
-if [ -n "$(ls -A /var/lib/postgresql/data)" ]; then
+# If the data directory is not empty and it's already a replica, just start postgres
+if [ -n "$(ls -A /var/lib/postgresql/data)" ] && [ -f "/var/lib/postgresql/data/standby.signal" ]; then
     exec docker-entrypoint.sh postgres
 fi
 

@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080/api/config/direcciones';
+const API_URL = `${window.location.origin}/api/config/direcciones`;
 
 document.addEventListener('DOMContentLoaded', () => {
     const app = document.getElementById('app');

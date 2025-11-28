@@ -1,0 +1,4 @@
+# Evitar versionar llaves y certificados locales
+key.pem
+cert.pem
+dev.local.crt
