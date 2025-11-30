@@ -23,6 +23,8 @@ services:
   postgres-master:
     image: postgres:15-alpine
     container_name: postgres-master
+    labels:
+      logging_jobname: security-db
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -84,6 +86,8 @@ services:
     build:
       context: ./infrastructure/db-proxy
     container_name: db-proxy
+    labels:
+      logging_jobname: security-db
     environment:
       DB_USER: ${DB_USER}
       DB_NAME: ${DB_NAME}

@@ -38,9 +38,23 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Logging middleware
+// Logging middleware hacia stdout en JSON para que Promtail/Loki lo etiquete (job=security-app)
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  const start = Date.now();
+  res.on('finish', () => {
+    const durationMs = Date.now() - start;
+    const payload = {
+      level: 'info',
+      service: 'auth-service',
+      method: req.method,
+      path: req.originalUrl || req.url,
+      status: res.statusCode,
+      duration_ms: durationMs,
+      user: req.user?.id || null,
+      event: 'http_request'
+    };
+    console.log(JSON.stringify(payload));
+  });
   next();
 });
 

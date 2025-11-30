@@ -36,12 +36,12 @@ scrape_configs:
           selector: '{job="security-gateway"}'
           stages:
             - regex:
-                expression: '^(?P<remote_addr>[^ ]*) [^ ]* [^ ]* \\[(?P<time_local>[^\\]]*)\\] "(?P<method>[A-Z]+) (?P<uri>[^ ]*) [^"]*" (?P<status>\\d{3}) (?P<body_bytes_sent>\\d+) "(?P<referer>[^"]*)" "(?P<user_agent>[^"]*)"(?P<rest>.*)$'
+                expression: '^(?P<remote_addr>[^ ]*) [^ ]* [^ ]* \[(?P<time_local>[^\]]*)\] "(?P<method>[A-Z]+) (?P<uri>[^ ]*) [^"]*" (?P<status>\d{3}) (?P<body_bytes_sent>\d+) "(?P<referer>[^"]*)" "(?P<user_agent>[^"]*)"(?P<rest>.*)$'
             - labels:
                 status:
             - match:
-                selector: '{status=~"401|403"}'
-                action: keep
+                selector: '{status!~"401|403|429"}'
+                action: drop
       - match:
           selector: '{job="security-app"}'
           stages:
