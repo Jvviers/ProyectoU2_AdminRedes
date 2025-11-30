@@ -79,7 +79,7 @@
 **Requisito:** Sistema centralizado enfocado en seguridad.
 - [ ] **Configuración:**
     - [x] Implementar sistema (Loki+Grafana recomendado o Docker logs básico) 
-    - [x] Registrar eventos obligatorios: Autenticación (éxito/fallo), Accesos denegados (401/403), Acceso a endpoints sensibles, Cambios de config, Conexiones a BD 
+    - [/] Registrar eventos obligatorios: Autenticación (éxito/fallo), Accesos denegados (401/403), Acceso a endpoints sensibles, Cambios de config, Conexiones a BD 
 - [ ] **Entregables:**
     - [x] Configuración de logs en `docker-compose.yml`.
     - [-] Script para consultar logs de seguridad.
