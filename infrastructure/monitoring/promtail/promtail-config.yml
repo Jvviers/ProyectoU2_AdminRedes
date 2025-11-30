@@ -29,3 +29,30 @@ scrape_configs:
         target_label: 'logstream'
       - source_labels: ['__meta_docker_container_label_logging_jobname']
         target_label: 'job'
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'service'
+    pipeline_stages:
+      - match:
+          selector: '{job="security-gateway"}'
+          stages:
+            - regex:
+                expression: '^(?P<remote_addr>[^ ]*) [^ ]* [^ ]* \\[(?P<time_local>[^\\]]*)\\] "(?P<method>[A-Z]+) (?P<uri>[^ ]*) [^"]*" (?P<status>\\d{3}) (?P<body_bytes_sent>\\d+) "(?P<referer>[^"]*)" "(?P<user_agent>[^"]*)"(?P<rest>.*)$'
+            - labels:
+                status:
+            - match:
+                selector: '{status=~"401|403"}'
+                action: keep
+      - match:
+          selector: '{job="security-app"}'
+          stages:
+            - json:
+                expressions:
+                  level: level
+                  msg: message
+                  status: status
+                  path: path
+                  user: user
+            - labels:
+                level:
+                status:
+                path:

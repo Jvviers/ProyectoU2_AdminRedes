@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:3.19
 
 # Install cron and PostgreSQL client
 RUN apk add --no-cache dcron postgresql-client gzip tar findutils bash
@@ -21,6 +21,12 @@ RUN chmod +x /usr/local/bin/backup_db.sh \
 RUN (crontab -l 2>/dev/null; echo "0 2 * * * /usr/local/bin/backup_db.sh && /usr/local/bin/backup_configs.sh && /usr/local/bin/cleanup_backups.sh >> /var/log/cron.log 2>&1") | crontab -
 # Ensure cron logs are sent to stdout/stderr for Docker logs
 RUN touch /var/log/cron.log
+
+# Create non-root user
+RUN addgroup -S backup && adduser -S backup -G backup
+
+# Drop privileges
+USER backup
 
 # Run cron in the foreground
 CMD ["sh", "-c", "crond -f -L /var/log/cron.log && tail -f /var/log/cron.log"]

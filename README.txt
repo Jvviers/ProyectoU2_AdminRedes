@@ -1,50 +1,32 @@
 README - Instrucciones de Inicio del Proyecto
 
-Este documento proporciona las instrucciones para iniciar el proyecto completo utilizando Docker Compose.
+1) Requisitos
+- Docker y Docker Compose instalados.
 
-**IMPORTANTE:** Utiliza el archivo docker-compose.yml que se encuentra en la carpeta `proyecto/`.
+2) Arranque
+- Desde la raiz: 
+  docker compose down
+  docker compose up -d --build
+- Verificacion: docker compose ps
+- Accesos: API Gateway https://localhost:8443, Prometheus http://localhost:9090, Grafana http://localhost:3010, frontends via gateway (/auth, /config, /admin, /totem, /).
 
-1.  Requisitos Previos:
-    Asegúrate de tener Docker y Docker Compose instalados en tu sistema.
+3) Infraestructura
+- PostgreSQL solo interno (5432); acceso externo via db-proxy (HAProxy).
+- API Gateway fuerza HTTPS; certificados dev con scripts/security/generate-dev-cert.sh.
 
-2.  Iniciar el Proyecto:
-    a.  Navega a la carpeta `proyecto` en tu terminal.
-        cd C:\Users\usuario\Documents\GitHub\ProyectoU2_AdminRedes\proyecto
+Gestion de secretos
+- .env esta en .gitignore. Crea tu .env copiando .env.example y reemplazando TODOS los placeholders (CHANGE_ME_*), incluyendo REPLICATION_USER/REPLICATION_PASSWORD.
+- Rotacion: ./scripts/security/rotate-secrets.sh > new-secrets.env; copia valores a .env (o gestor de secretos) y reinicia: docker compose down && docker compose up -d.
+- No hay credenciales hardcodeadas en docker-compose.yml; todo proviene de variables de entorno.
 
-    b.  Detén y elimina cualquier contenedor Docker antiguo que pueda estar ejecutándose.
-        docker-compose down
+Logging de seguridad (Loki + Promtail + Grafana)
+- Etiquetas: gateway y servicios app llevan labels logging_jobname (security-gateway / security-app) en docker-compose.yml.
+- Promtail: parsea access logs de gateway y conserva 401/403; parsea JSON de apps (labels level/status/path/user si la app loguea en JSON).
+- Consulta: scripts/security/query-logs.sh '{job="security-gateway"} |= "403"' (usa LOKI_URL=http://localhost:3100 por defecto, LIMIT ajustable).
+- Documentacion: docs/logging-seguridad.md (queries, eventos cubiertos, notas de seguridad).
 
-    c.  Construye las imágenes y levanta todos los servicios en modo detached (segundo plano).
-        docker-compose up -d --build
+Auditoria de historial
+- Ejecuta un escaner (gitleaks/trufflehog) sobre git rev-list --all. Si aparece algo, rota en el proveedor y actualiza tus secretos locales.
 
-3.  Verificar el Estado de los Servicios:
-    Desde la carpeta `proyecto/`, puedes verificar el estado de los contenedores con:
-        docker-compose ps
-
-    Asegúrate de que todos los servicios estén en estado 'Up' o 'healthy'.
-
-4.  Acceso a los Servicios:
-    Una vez que todos los contenedores estén en funcionamiento, podrás acceder a los diferentes servicios a través de las siguientes URLs:
-
-    **Interfaces de Usuario (Frontend):**
-    -   Lobby Frontend: http://localhost:8083
-    -   Auth Frontend: http://localhost:8082
-    -   Config Frontend: http://localhost:8081
-
-    **API Gateway (Punto de entrada para APIs):**
-    -   URL Base: http://localhost:8080
-    -   Ruta de Autenticación: http://localhost:8080/api/auth/
-    -   Ruta de Configuración: http://localhost:8080/api/config/
-    -   Ruta de Citas: http://localhost:8080/api/appointments/
-
-    **Herramientas de Monitoreo:**
-    -   Prometheus: http://localhost:9090
-    -   Grafana: http://localhost:3010
-
-    **Bases de Datos y Servicios Internos:**
-    -   PostgreSQL (via HAProxy): localhost:5433
-        - Uso interno entre contenedores: `db-proxy:5432`
-        - El contenedor `postgres-master` ya no expone 5432 al host; todo acceso externo debe ir por el proxy.
-    -   Redis: localhost:6379
-
-¡Listo! El proyecto debería estar funcionando.
+Nota nginx (frontends/gateway)
+- Se ejecutan como root para evitar el fallo de chown en /var/cache/nginx de la imagen nginx:alpine. Para endurecer, usar tmpfs o imagen derivada con permisos precreados antes de volver a no-root.
