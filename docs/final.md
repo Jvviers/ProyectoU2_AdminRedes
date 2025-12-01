@@ -1,6 +1,6 @@
 # Informe Final de Hardening y Seguridad
 
-Este documento consolida el trabajo de seguridad y hardening realizado sobre la arquitectura de microservicios del proyecto, comparando los resultados con la lista de tareas y requisitos. Cada sección detalla la implementación, el estado y las evidencias para su verificación.
+Este documento consolida el trabajo de seguridad y hardening realizado sobre la arquitectura de microservicios del proyecto. Cada sección detalla la implementación, el estado y las evidencias para su verificación.
 
 ---
 
@@ -267,12 +267,13 @@ El API Gateway (Nginx) ha sido configurado para actuar como un WAF básico.
 
 ## 2.8. Políticas y Documentación
 
-**Estado:** 🟡 Pendiente
+**Estado:** ✅ Completado
 
-Los siguientes documentos de políticas de seguridad, requeridos por el proyecto, aún no han sido creados. Deben ser redactados y añadidos a la carpeta `docs/`.
+Los siguientes documentos se adjuntan en /docs
 
 -   `docs/politica-seguridad.md`
 -   `docs/matriz-riesgos.md`
 -   `docs/owasp-top10.md`
 -   `docs/plan-incidentes.md`
 -   `docs/cumplimiento-normativo.md`
+
