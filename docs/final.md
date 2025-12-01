@@ -31,8 +31,8 @@ Se ha implementado HTTPS/TLS en el API Gateway (Nginx) para asegurar toda la com
 
 1.  **Generar los certificados:**
     ```bash
-    # Ejecutar desde la raíz del proyecto
-    sh ./scripts/security/generate-dev-cert.sh
+    # Ejecutar desde la raíz del proyecto con wsl
+    wsl sudo bash ./scripts/security/generate-dev-cert.sh
     ```
     Esto creará los archivos `cert.pem` y `key.pem` en `services/api-gateway/certs/`.
 
