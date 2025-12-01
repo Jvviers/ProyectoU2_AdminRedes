@@ -38,22 +38,22 @@ Se ha implementado HTTPS/TLS en el API Gateway (Nginx) para asegurar toda la com
 
 2.  **Verificar la redirección HTTP a HTTPS:**
     ```bash
-    curl -k -I http://localhost:8080/
+    curl.exe -k -I http://dev.local:8080/
     ```
     **Salida esperada:**
     ```
     HTTP/1.1 301 Moved Permanently
-    Location: https://localhost:8443/
+    Location: https://dev.local:8443/
     ...
     ```
 
 3.  **Verificar los Headers de Seguridad:**
     ```bash
-    curl -k -I https://localhost:8443/
+    curl.exe -k -I https://dev.local:8443/
     ```
-    **Salida esperada (extracto):**
+    **Salida esperada (extracto):** 
     ```
-    HTTP/1.1 200 OK
+    HTTP/1.1 403 Forbidden 
     ...
     Strict-Transport-Security: max-age=31536000; includeSubDomains
     X-Frame-Options: SAMEORIGIN
@@ -61,9 +61,22 @@ Se ha implementado HTTPS/TLS en el API Gateway (Nginx) para asegurar toda la com
     Content-Security-Policy: default-src 'self'; ... upgrade-insecure-requests;
     ...
     ```
-
+    Al aplicar el siguiente comando omitimos configuración de WAF
+    ```bash
+    curl.exe -k -I -A "Mozilla/5.0" https://dev.local:8443/
+    ```
+    **Salida esperada (extracto):**
+    ```
+    HTTP/1.1 200 OK 
+    ... 
+    Strict-Transport-Security: max-age=31536000; includeSubDomains 
+    X-Frame-Options: SAMEORIGIN 
+    X-Content-Type-Options: nosniff 
+    Content-Security-Policy: default-src 'self'; ... upgrade-insecure-requests; 
+    ...
+    ```
 4.  **Acceder desde el navegador:**
-    Visita `https://localhost:8443`. Deberás aceptar el riesgo del certificado autofirmado. Una vez cargada la página, el navegador mostrará un candado, indicando que la conexión es HTTPS.
+    Visita `https://dev.local:8443`. Deberás aceptar el riesgo del certificado autofirmado. Una vez cargada la página, el navegador mostrará un candado, indicando que la conexión es HTTPS.
 
 ---
 
@@ -91,8 +104,8 @@ Se ha implementado HTTPS/TLS en el API Gateway (Nginx) para asegurar toda la com
 
 ### Análisis de Vulnerabilidades
 
-**Estado:** 🟡 Pendiente
-- El requisito de escanear todas las imágenes con herramientas como Trivy o Docker Scout y generar un reporte de remediación (`docs/reportes/` y `vulnerabilidades-remediadas.md`) no se ha completado. Se debe crear el script `scripts/security/scan-vulnerabilities.sh` para automatizar este proceso.
+**Estado:** ✅ Completado
+- Se utiliza docker scout usandolo a través del script `generarMarkdown.js`, para esto se le pasa el listado de imágenes a analizar con un `imagenes.txt` y esto genera un .md con el CVE, la Severity y el total de vulnerabilidades de las imágenes.
 
 ---
 
@@ -126,14 +139,14 @@ Se ha implementado HTTPS/TLS en el API Gateway (Nginx) para asegurar toda la com
 2.  **Intentar conexión desde el host (debe fallar):**
     ```bash
     # Asume que tienes psql instalado localmente
-    psql -h localhost -p 5432 -U <APP_DB_USER> -d <DB_NAME>
+    psql -h localhost -p 5432 -U user -d municipalidad_db
     ```
-    **Salida esperada:** `psql: error: connection to server at "localhost" (::1), port 5432 failed: Connection refused`.
+    **Salida esperada:** `psql: error: connection to server at "dev.local" (127.0.0.1), port 5432 failed: Connection refused Is the server running on that host and accepting TCP/IP connections?`.
 
 3.  **Verificar conexión interna a través del proxy (debe funcionar):**
     ```bash
     # Ejecuta un comando psql dentro de un contenedor que tenga acceso a la red de la BD
-    docker exec -it auth-service psql -h db-proxy -p 5432 -U $APP_DB_USER -d $DB_NAME -c "SELECT 1;"
+    docker exec -e PGPASSWORD=user123_adminX -it postgres-master psql -h db-proxy -p 5432 -U user -d municipalidad_db -c "SELECT 1;" 
     ```
     **Salida esperada:** `(1 row)`
 
@@ -164,13 +177,9 @@ Se ha implementado HTTPS/TLS en el API Gateway (Nginx) para asegurar toda la com
 ### Evidencia y Verificación
 1.  **Verificar `.gitignore`:** Confirma que la línea `.env` existe en el archivo `.gitignore`.
 2.  **Inspeccionar `.env.example`:** Revisa que este archivo contenga las claves de las variables de entorno pero con valores de ejemplo o vacíos.
-3.  **Ejecutar el script de rotación:**
-    ```bash
-    sh ./scripts/security/rotate-secrets.sh
-    ```
-    El script imprimirá en la consola un bloque de nuevas variables de entorno que pueden ser copiadas y pegadas en el archivo `.env`.
 
----
+**Estado:** 🟡 Pendiente
+No se implementó rotate secrets.
 
 ## 2.5. WAF / Rate Limiting
 
@@ -192,7 +201,7 @@ El API Gateway (Nginx) ha sido configurado para actuar como un WAF básico.
 
 1.  **Probar bloqueo de User-Agent (403):**
     ```bash
-    curl -k -I -A "sqlmap" https://localhost:8443/api/auth/
+    curl.exe -k -I -A "sqlmap" https://dev.local:8443/api/auth/
     ```
     **Salida esperada:**
     ```
